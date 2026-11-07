@@ -826,7 +826,7 @@ function resize() {
 }
 function fitCamera() {   // ganzen Raum schräg von vorn oben zeigen, passend zum Seitenverhältnis der Ansicht
   const { w, l } = state.room, dir = new THREE.Vector3(0.5, 0.72, 0.72).normalize();
-  const d = (Math.max(w, l * 0.9) * 1.15) / Math.min(1, camera.aspect * 1.05) + 1.2;
+  const d = (Math.max(w, l * 0.9) * 1.32) / Math.min(1, camera.aspect * 1.05) + 1.2;
   controls.target.set(0, 0.3, 0); camera.position.copy(dir.multiplyScalar(d)); controls.update();
 }
 addEventListener('resize', resize);
