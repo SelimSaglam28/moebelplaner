@@ -35,7 +35,7 @@
   .seg button { border: 0; border-radius: 0; padding: 6px 12px; background: transparent; color: var(--ink); font: 500 13px var(--sans); cursor: pointer; }
   .seg button[aria-pressed="true"] { background: var(--ink); color: var(--panel); }
   .views { position: relative; display: grid; grid-template-columns: 1fr 1fr; min-height: 0; min-width: 0; }
-  .views.only3d { grid-template-columns: 1fr 0; } .views.onlyplan { grid-template-columns: 0 1fr; }
+  .views.only3d, .views.onlyplan { grid-template-columns: 1fr; }  /* die ausgeblendete Ansicht belegt keine Spalte */
   .views.only3d #planWrap, .views.onlyplan #view3d { display: none; }
   #view3d, #planWrap { position: relative; min-width: 0; min-height: 0; overflow: hidden; touch-action: none; }
   #planWrap { border-left: 1px solid var(--line); background: var(--paper); }
@@ -835,7 +835,9 @@ new MutationObserver(() => { applyBg(); drawPlan(); }).observe(document.document
 
 // ---------- Start ----------
 applyBg(); buildCatalog(); roomInputs(); buildRoom3D(); rebuildAll();
-setView(matchMedia('(max-width: 760px)').matches ? '3d' : 'both');
+const fromHash = () => ({ '#grundriss': 'plan', '#3d': '3d', '#beides': 'both' }[location.hash]);
+setView(fromHash() || (matchMedia('(max-width: 760px)').matches ? '3d' : 'both'));
+addEventListener('hashchange', () => { const v = fromHash(); if (v) setView(v); });
 select(null, false); setTab('tAdd');
 const camDir = new THREE.Vector3();
 (function loop() {
