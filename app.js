@@ -1109,6 +1109,7 @@ addEventListener('blur', () => walk.keys.clear());
     }
     if (walk.lockFailed) { walk.drag = { id: e.pointerId, x: e.clientX, y: e.clientY }; try { el.setPointerCapture(e.pointerId); } catch (err) { /* egal */ } }
     else if (document.pointerLockElement !== el) lockPointer();
+    else if (e.button === 0 && (walk.target || walk.seat)) toggleSit();   // Klick bei gefangener Maus = E
   });
   el.addEventListener('pointermove', (e) => {
     if (!walk.on) return;
