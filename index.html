@@ -114,6 +114,7 @@
   #walkPause .keys { font: 12px var(--mono); color: var(--mute); }
   #joy { position: absolute; left: calc(22px + env(safe-area-inset-left, 0px)); bottom: calc(22px + env(safe-area-inset-bottom, 0px)); width: 116px; height: 116px; border-radius: 50%; background: rgba(255,255,255,.2); box-shadow: inset 0 0 0 2px rgba(255,255,255,.6), 0 1px 8px rgba(0,0,0,.25); }
   #joyKnob { position: absolute; left: 50%; top: 50%; width: 50px; height: 50px; margin: -25px 0 0 -25px; border-radius: 50%; background: rgba(255,255,255,.88); box-shadow: 0 1px 5px rgba(0,0,0,.3); }
+  #allBtn { position: absolute; right: calc(20px + env(safe-area-inset-right, 0px)); bottom: calc(140px + env(safe-area-inset-bottom, 0px)); height: 40px; padding: 0 14px; border-radius: 20px; border: 0; background: rgba(20,22,28,.74); color: #fff; font: 600 13px var(--sans); box-shadow: 0 2px 8px rgba(0,0,0,.3); pointer-events: auto; cursor: pointer; }
   #sitBtn { position: absolute; right: calc(20px + env(safe-area-inset-right, 0px)); bottom: calc(34px + env(safe-area-inset-bottom, 0px)); min-width: 92px; height: 92px; border-radius: 46px; padding: 0 16px; border: 0; background: var(--brass); color: #fff; font: 600 15px var(--sans); box-shadow: 0 3px 14px rgba(0,0,0,.32); pointer-events: auto; cursor: pointer; }
   body.walking .hint, body.walking #view3d > .tag { display: none; }
   .cat-intro { margin: -2px 0 8px; }
@@ -153,7 +154,7 @@
     </div>
   </header>
   <div class="views" id="views">
-    <div id="view3d"><span class="tag">3D</span><span class="hint">Möbel ziehen = verschieben · R = drehen · Ziehen im Raum = umsehen</span><button id="walkBtn" class="walk-btn" type="button" title="Durch den Raum laufen wie in einem Spiel – und dich auf Sofas, Stühle und Betten setzen">Rumlaufen</button><div id="walkUi" hidden><div id="crosshair"></div><div id="walkHint" class="walk-hint"></div><div id="walkPause" hidden><div class="card"><b>Pause</b><span>Klicken zum Weiterlaufen</span><span class="keys">WASD gehen · Maus umsehen · Shift rennen · E hinsetzen</span></div></div><div id="joy" hidden><div id="joyKnob"></div></div><button id="sitBtn" type="button" hidden>Hinsetzen</button></div><div id="phase" data-tour-phase="loading" hidden></div></div>
+    <div id="view3d"><span class="tag">3D</span><span class="hint">Möbel ziehen = verschieben · R = drehen · Ziehen im Raum = umsehen</span><button id="walkBtn" class="walk-btn" type="button" title="Durch den Raum laufen wie in einem Spiel – und dich auf Sofas, Stühle und Betten setzen">Rumlaufen</button><div id="walkUi" hidden><div id="crosshair"></div><div id="walkHint" class="walk-hint"></div><div id="walkPause" hidden><div class="card"><b>Pause</b><span>Klicken zum Weiterlaufen</span><span class="keys">WASD gehen · Maus umsehen · Shift rennen · E hinsetzen / Licht · L alle Lichter</span></div></div><div id="joy" hidden><div id="joyKnob"></div></div><button id="sitBtn" type="button" hidden>Hinsetzen</button><button id="allBtn" type="button" hidden>Alle Lichter</button></div><div id="phase" data-tour-phase="loading" hidden></div></div>
     <div id="planWrap"><canvas id="plan"></canvas><span class="tag">Grundriss · Maße in m</span><div id="luxTip" class="luxtip" hidden></div></div>
   </div>
   <aside>
@@ -325,7 +326,7 @@ async function fromPassword(pw) {
   return crypto.subtle.deriveKey({ name: 'PBKDF2', salt: unb64(m.salt), iterations: m.iterations, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, true, ['decrypt']);
 }
 let started = false;
-async function start() { if (started) return; started = true; $('lock').hidden = true; await import('./app.js?v=19f8760990'); }
+async function start() { if (started) return; started = true; $('lock').hidden = true; await import('./app.js?v=31f8fb4c31'); }
 (async () => {
   try {
     const saved = localStorage.getItem(STORE);

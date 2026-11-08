@@ -916,6 +916,43 @@ function pickSeat() {   // Möbel in der Bildmitte, höchstens 2,2 m entfernt
   if (!kind || Math.hypot(hit.point.x - walk.pos.x, hit.point.z - walk.pos.z) > 2.2) return null;
   return { it, point: hit.point.clone(), kind };
 }
+function pickTarget() {   // Sitzmöbel (pickSeat) oder Lampe in der Bildmitte – das nähere gewinnt
+  const seat = pickSeat();
+  const seatDist = seat ? seat.point.distanceTo(camera.position) : Infinity;
+  const lamps = state.items.filter(isLight);
+  if (!lamps.length) return seat;
+  ray.setFromCamera(centerNdc, camera);
+  let lamp = null, lampDist = Infinity;
+  const o = ray.ray.origin, d = ray.ray.direction, v = new THREE.Vector3();
+  for (const it of lamps) {   // Leuchte knapp verfehlt zählt auch (Deckenleuchten sind kleine Ziele)
+    v.set(it.x, lightY(it), it.z).sub(o);
+    const dist = v.length();
+    if (dist > 4.5 || dist < 0.05) continue;
+    const ang = Math.acos(Math.max(-1, Math.min(1, v.dot(d) / dist)));
+    if (ang < Math.max(0.06, Math.atan(0.32 / dist)) && dist < lampDist) { lamp = it; lampDist = dist; }
+  }
+  const objs = lamps.map((it) => meshes.get(it.id)).filter(Boolean);
+  const hit = objs.length ? ray.intersectObjects(objs, true)[0] : null;
+  if (hit && hit.distance < 4.5 && hit.distance < lampDist) {
+    let g = hit.object; while (g && !g.userData.id) g = g.parent;
+    const it = g && lamps.find((i) => i.id === g.userData.id);
+    if (it) { lamp = it; lampDist = hit.distance; }
+  }
+  return lamp && lampDist < seatDist ? { light: true, it: lamp } : seat;
+}
+function lightsVisible() { if (!LM.on) { LM.on = true; saveLM(); setLightMode(true); } }
+function toggleLamp(it) {
+  it.off = it.off ? undefined : true;
+  lightsVisible(); rebuild(it); changed(); renderLightUi();
+  walk.hintKey = ''; updateWalkHint();
+}
+function toggleAllLamps() {
+  const ls = state.items.filter(isLight); if (!ls.length) return;
+  const anyOn = ls.some((it) => !it.off);
+  for (const it of ls) { it.off = anyOn ? true : undefined; rebuild(it); }
+  lightsVisible(); changed(); renderLightUi();
+  walk.hintKey = ''; updateWalkHint();
+}
 function animTo(x, y, z, yaw, pitch, dur) {
   walk.anim = { t: 0, dur, from: { x: walk.pos.x, y: walk.pos.y, z: walk.pos.z, yaw: walk.yaw, pitch: walk.pitch }, to: { x, y, z, yaw: walk.yaw + wrapPi(yaw - walk.yaw), pitch } };
 }
@@ -940,7 +977,7 @@ function standUp() {   // nächster freier Platz: bevorzugt vorn, sonst hinten (
   animTo(tx, EYE, tz, walk.yaw, Math.max(-0.3, Math.min(0.2, walk.pitch)), 0.7);
   updateWalkHint();
 }
-function toggleSit() { if (walk.anim) return; if (walk.seat) standUp(); else if (walk.target) sitDown(walk.target); }
+function toggleSit() { if (walk.anim) return; if (walk.seat) standUp(); else if (walk.target && walk.target.light) toggleLamp(walk.target.it); else if (walk.target) sitDown(walk.target); }
 function look(dx, dy, k) {
   const t = walk.anim ? walk.anim.to : walk;
   t.yaw -= dx * k; t.pitch = Math.max(-1.45, Math.min(1.45, t.pitch - dy * k));
@@ -950,17 +987,20 @@ function updateWalkHint() {
   const t = walk.target, locked = document.pointerLockElement === renderer.domElement;
   let text;
   if (walk.seat) text = walk.touch ? '' : 'E oder WASD – aufstehen';
+  else if (t && t.light) text = (walk.touch ? '' : 'E – ') + (t.it.off ? 'Licht an: ' : 'Licht aus: ') + shortName(t.it);
   else if (t) text = (walk.touch ? '' : 'E – ') + (t.kind === 'bed' ? 'Hinlegen: ' : 'Hinsetzen: ') + shortName(t.it);
   else if (walk.touch) text = 'Links ziehen: gehen · rechts wischen: umsehen';
-  else if (walk.lockFailed) text = 'Ziehen: umsehen · WASD: gehen · Shift: rennen · E: hinsetzen';
-  else text = locked ? 'WASD gehen · Maus umsehen · Shift rennen · E hinsetzen · Esc Pause' : '';
-  const key = text + '|' + !!t + '|' + !!walk.seat + '|' + walk.touch;
+  else if (walk.lockFailed) text = 'Ziehen: umsehen · WASD: gehen · Shift: rennen · E: hinsetzen / Licht · L: alle Lichter';
+  else text = locked ? 'WASD gehen · Maus umsehen · Shift rennen · E hinsetzen / Licht · L alle Lichter · Esc Pause' : '';
+  const lamps = state.items.filter(isLight), lampsOn = lamps.filter((it) => !it.off).length;
+  const key = text + '|' + !!t + '|' + !!walk.seat + '|' + walk.touch + '|' + lamps.length + '|' + lampsOn;
   if (key === walk.hintKey) return;
   walk.hintKey = key;
   $('walkHint').textContent = text;
   $('crosshair').classList.toggle('on', !!t);
   const b = $('sitBtn'); b.hidden = !walk.touch || (!t && !walk.seat);
-  b.textContent = walk.seat ? 'Aufstehen' : t && t.kind === 'bed' ? 'Hinlegen' : 'Hinsetzen';
+  b.textContent = walk.seat ? 'Aufstehen' : t && t.light ? (t.it.off ? 'Licht an' : 'Licht aus') : t && t.kind === 'bed' ? 'Hinlegen' : 'Hinsetzen';
+  const ab = $('allBtn'); ab.hidden = !walk.touch || !lamps.length; ab.textContent = lampsOn ? 'Alle Lichter aus' : 'Alle Lichter an';
 }
 function drawPlayer() {   // Minikarte im Grundriss
   if (!walk.on) return;
@@ -999,7 +1039,7 @@ function updateWalk(dt) {
   camera.quaternion.setFromEuler(camEuler.set(walk.pitch, walk.yaw, 0, 'YXZ'));
   camera.updateMatrixWorld();
   walk.pickT -= dt;
-  if (walk.pickT <= 0) { walk.pickT = 0.1; walk.target = walk.seat || walk.anim ? null : pickSeat(); updateWalkHint(); }
+  if (walk.pickT <= 0) { walk.pickT = 0.1; walk.target = walk.seat || walk.anim ? null : pickTarget(); updateWalkHint(); }
   walk.planT -= dt;
   if (walk.planT <= 0) { walk.planT = 0.1; drawPlan(); }
 }
@@ -1027,12 +1067,13 @@ function exitWalk() {
   walk.on = false; walk.keys.clear(); walk.joy = walk.look = walk.drag = null; walk.seat = walk.anim = walk.target = null;
   if (document.pointerLockElement) document.exitPointerLock();
   document.body.classList.remove('walking', 'touchwalk');
-  $('walkUi').hidden = true; $('sitBtn').hidden = true; $('walkBtn').textContent = 'Rumlaufen';
+  $('walkUi').hidden = true; $('sitBtn').hidden = true; $('allBtn').hidden = true; $('walkBtn').textContent = 'Rumlaufen';
   controls.enabled = true; applyBg();
   requestAnimationFrame(() => { resize(); fitCamera(); drawPlan(); });
 }
 $('walkBtn').onclick = () => (walk.on ? exitWalk() : enterWalk());
 $('sitBtn').onclick = () => toggleSit();
+$('allBtn').onclick = () => toggleAllLamps();
 $('walkPause').addEventListener('click', () => lockPointer());
 document.addEventListener('pointerlockchange', () => {
   const locked = document.pointerLockElement === renderer.domElement;
@@ -1044,6 +1085,7 @@ document.addEventListener('mousemove', (e) => { if (walk.on && document.pointerL
 addEventListener('keydown', (e) => {
   if (!walk.on || e.metaKey || e.ctrlKey || e.altKey) return;
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  if (e.code === 'KeyL') { e.preventDefault(); if (!e.repeat) toggleAllLamps(); return; }
   if (e.code === 'KeyE' || e.code === 'Space') { e.preventDefault(); if (!e.repeat) toggleSit(); return; }
   if (e.code === 'Escape' && (walk.lockFailed || walk.touch)) { exitWalk(); return; }
   if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ShiftLeft', 'ShiftRight'].includes(e.code)) { walk.keys.add(e.code); e.preventDefault(); }
@@ -1091,7 +1133,9 @@ if (qs.has('test')) window.__plan = {   // nur für automatische Tests (?test)
     const cr = Math.cos(it.rot), sr = Math.sin(it.rot);
     sitDown({ it, kind: sitKind(it), point: new THREE.Vector3(it.x + cr * lx, 0.5, it.z - sr * lx) }); return 'sitzt: ' + shortName(it);
   },
-  target: () => (walk.target ? shortName(walk.target.it) + ' / ' + walk.target.kind : null),
+  target: () => (walk.target ? (walk.target.light ? 'Licht: ' + shortName(walk.target.it) + (walk.target.it.off ? ' (aus)' : ' (an)') : shortName(walk.target.it) + ' / ' + walk.target.kind) : null),
+  act: () => { toggleSit(); return 'ok'; },
+  lampsOn: () => state.items.filter(isLight).filter((it) => !it.off).length + ' / ' + state.items.filter(isLight).length,
   where: () => [walk.pos.x.toFixed(2), walk.pos.y.toFixed(2), walk.pos.z.toFixed(2), ((walk.yaw * 180) / Math.PI).toFixed(0)].join(' '),
   keys(codes, ms) { codes.forEach((c) => walk.keys.add(c)); setTimeout(() => codes.forEach((c) => walk.keys.delete(c)), ms); return 'ok'; },
   joy(x, y, ms) { walk.joy = { id: -99, cx: 0, cy: 0, x, y }; $('joyKnob').style.transform = `translate(${x * 50}px, ${y * 50}px)`; setTimeout(() => { walk.joy = null; $('joyKnob').style.transform = ''; }, ms); return 'ok'; },
