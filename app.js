@@ -106,14 +106,24 @@ const CAT = [
     { type: 'kommode', name: 'Kommode', kind: 'cabinet', w: 1.0, d: 0.45, h: 0.85, color: 'eiche-hell', opts: { fronts: 2, drawers: true } },
     { type: 'tvboard', name: 'TV-Board', kind: 'cabinet', w: 1.8, d: 0.4, h: 0.5, color: 'schwarz', opts: { fronts: 3, legs: true, tv: true } },
     { type: 'regal', name: 'Regal offen', kind: 'shelf', w: 0.8, d: 0.35, h: 2.0, color: 'eiche-hell', opts: {} },
+    { type: 'fernseher', name: 'Fernseher', note: '43–85″ · stellt sich auf TV-Board, Sideboard oder Kommode', kind: 'tv', icon: 'tv', w: 1.439, d: 0.22, h: 0.88, color: '#111214', opts: { inch: 65, mount: 'stand' } },
   ] },
   { group: 'Sonstiges', items: [
     { type: 'teppich', name: 'Teppich eckig', kind: 'rug', shape: 'rect', w: 2.0, d: 3.0, h: 0.015, color: '#d9d2c5', opts: {} },
     { type: 'teppichrund', name: 'Teppich rund', kind: 'rug', shape: 'round', w: 2.0, d: 2.0, h: 0.015, color: '#9a9690', opts: {} },
     { type: 'pflanze', name: 'Pflanze', kind: 'plant', shape: 'round', w: 0.5, d: 0.5, h: 1.2, color: '#d9d2c5', opts: {} },
-    { type: 'lampe', name: 'Stehlampe', kind: 'lamp', shape: 'round', w: 0.4, d: 0.4, h: 1.6, color: '#d9d2c5', opts: {} },
   ] },
 ];
+const LIGHT_GROUP = { group: 'Licht & Lampen', intro: 'Lampen mit Lichtstrom in Lumen. „Lichtquelle markieren“ für vorhandene Leuchten oder Auslässe im Haus. Die Wirkung siehst du im Tab „Licht“.', items: [
+  { type: 'deckenleuchte', name: 'Deckenleuchte', note: 'an der Decke · strahlt nach unten', kind: 'light', icon: 'light', shape: 'round', w: 0.4, d: 0.4, h: 0.08, color: '#f1efeb', opts: {}, L: { lm: 2000, mode: 'down', mount: 'ceiling', k: 3000 } },
+  { type: 'pendel', name: 'Pendelleuchte', note: 'hängend, Höhe einstellbar – z. B. über dem Esstisch', kind: 'light', icon: 'light', shape: 'round', w: 0.45, d: 0.45, h: 0.3, color: '#2b2b2d', opts: {}, L: { lm: 1500, mode: 'down', mount: 'pendant', lz: 1.45, k: 2700 } },
+  { type: 'spot', name: 'Einbauspot / Downlight', note: 'in der Decke · Abstrahlwinkel 36°', kind: 'light', icon: 'light', shape: 'round', w: 0.1, d: 0.1, h: 0.02, color: '#f1efeb', opts: {}, L: { lm: 500, mode: 'spot', beam: 36, mount: 'ceiling', k: 3000 } },
+  { type: 'wandleuchte', name: 'Wandleuchte', note: 'an die Wand schieben · Höhe einstellbar', kind: 'light', icon: 'light', w: 0.3, d: 0.12, h: 0.15, color: '#f1efeb', opts: {}, L: { lm: 800, mode: 'omni', mount: 'wall', lz: 1.8, k: 2700 } },
+  { type: 'lampe', name: 'Stehlampe', note: 'mit Schirm', kind: 'lamp', shape: 'round', w: 0.4, d: 0.4, h: 1.6, color: '#d9d2c5', opts: {}, L: { lm: 1800, mode: 'omni', mount: 'floor', k: 2700 } },
+  { type: 'tischlampe', name: 'Tischlampe', note: 'stellt sich auf Tisch, Kommode oder Sideboard', kind: 'light', icon: 'light', shape: 'round', w: 0.3, d: 0.3, h: 0.45, color: '#d9d2c5', opts: {}, L: { lm: 400, mode: 'omni', mount: 'table', k: 2700 } },
+  { type: 'lichtquelle', name: 'Lichtquelle markieren', note: 'vorhandene Leuchte oder Auslass · Lumen, Höhe, Art einstellbar', kind: 'light', icon: 'light', shape: 'round', w: 0.2, d: 0.2, h: 0.05, color: '#a8792a', opts: {}, L: { lm: 1000, mode: 'down', mount: 'marker', k: 3000 } },
+] };
+CAT.push(LIGHT_GROUP);
 const BYTYPE = Object.fromEntries(CAT.flatMap((g) => g.items.map((i) => [i.type, i])));
 
 // ---------- Zustand ----------
@@ -140,7 +150,7 @@ function showroom() {   // großer Raum mit allen Foto-Möbeln, Rücken an der W
   const P = Math.PI;
   const s = {
     v: 2,
-    room: { w: 10, l: 8, h: 2.6, door: { wall: 'S', pos: 0.18, width: 0.9 }, win: { wall: 'N', pos: 0.5, width: 2.2 } },
+    room: { w: 10, l: 8, h: 2.6, north: 0, door: { wall: 'S', pos: 0.18, width: 0.9 }, wins: [{ wall: 'N', pos: 0.5, width: 2.2, height: 1.4, sill: 0.8 }, { wall: 'S', pos: 0.85, width: 1.4, height: 1.3, sill: 0.9 }, { wall: 'W', pos: 0.22, width: 1.2, height: 1.3, sill: 0.9 }] },
     items: [
       newItem('teppich', -2.9, -1.55, P / 2, { w: 2.0, d: 3.0 }),
       newItem('f_52d5ed', -3.0, -3.06, 0),
@@ -156,8 +166,11 @@ function showroom() {   // großer Raum mit allen Foto-Möbeln, Rücken an der W
       newItem('f_92cb10', -1.6, 3.81, P),
       newItem('pflanze', 4.55, -3.55),
       newItem('f_460b66', 0.0, 0.95, 0),
+      newItem('pendel', 3.5, -1.6), newItem('deckenleuchte', -2.6, -1.5), newItem('deckenleuchte', 1.9, 1.7),
+      newItem('spot', 0.9, 3.2), newItem('spot', 1.7, 3.2), newItem('spot', -2.5, 3.0), newItem('tischlampe', -1.9, 3.8),
     ],
   };
+  for (const it of s.items) if (stacks(it)) { const sp = supportOf(it, s.items); it.on = sp ? sp.id : null; }   // Tischlampe auf den Schuhschrank
   const W = s.room.w / 2 - 0.004, L = s.room.l / 2 - 0.004;
   for (const it of s.items) {   // Umrisse (Foto-Modelle sind unregelmäßig) sicher innerhalb der Wände
     const wf = worldFootprint(it), xs = wf.map((q) => q[0]), zs = wf.map((q) => q[1]);
@@ -171,6 +184,7 @@ let beforeShow = null;   // vorherige Einrichtung (für „Zurück“)
 let state = null;
 try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s && s.room && Array.isArray(s.items)) state = s; } catch (e) { /* kein Speicher */ }
 if (state) state.items = state.items.filter((i) => BYTYPE[i.type]);   // unbekannte Typen überspringen
+if (state) normRoom(state.room);
 let firstShow = false;
 if (PHOTO_ITEMS.length) try { firstShow = !localStorage.getItem(SEEN); localStorage.setItem(SEEN, '1'); } catch (e) { firstShow = false; }
 if (!state) state = PHOTO_ITEMS.length ? showroom() : example();
@@ -179,6 +193,7 @@ else if (firstShow && !state.v) {   // einmalig: Showroom zeigen, alte Einrichtu
   try { localStorage.setItem(KEY + '-vorher', JSON.stringify(state)); } catch (e) { /* egal */ }
   state = showroom();
 }
+normRoom(state.room);   // altes Einzelfenster → Fensterliste
 uid = 1 + Math.max(0, ...state.items.map((i) => +String(i.id).slice(1) || 0));
 let selected = null;
 let saveTimer = null;
@@ -275,7 +290,7 @@ renderer.domElement.style.display = 'block';
 const scene = new THREE.Scene();
 scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
 scene.environmentIntensity = 0.65;
-scene.add(new THREE.HemisphereLight(0xffffff, 0xcfc6b8, 0.35));
+const hemi = new THREE.HemisphereLight(0xffffff, 0xcfc6b8, 0.35); scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xffffff, 1.5); sun.position.set(3, 7, 4); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
 Object.assign(sun.shadow.camera, { left: -9, right: 9, top: 9, bottom: -9 }); scene.add(sun);
 const camera = new THREE.PerspectiveCamera(45, 1, 0.05, 100);
@@ -286,7 +301,10 @@ const roomG = new THREE.Group(); scene.add(roomG);
 const furnG = new THREE.Group(); scene.add(furnG);
 const ringG = new THREE.Group(); scene.add(ringG);
 let walls = [];
-function applyBg() { scene.background = new THREE.Color(walk.on ? 0xdde8f2 : (css('--paper') || '#f5f5f2')); }
+function applyBg() {
+  if (LM.on && LUX.sun) { const a = LUX.sun.alt / DEG; scene.background = new THREE.Color(a < -4 ? 0x0c1220 : a < 2 ? 0x55647f : walk.on ? 0xcfe0f0 : (css('--paper') || '#f5f5f2')); return; }
+  scene.background = new THREE.Color(walk.on ? 0xdde8f2 : (css('--paper') || '#f5f5f2'));
+}
 
 function buildRoom3D() {
   roomG.clear();
@@ -294,10 +312,8 @@ function buildRoom3D() {
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(w, l), woodMat('eiche-hell', w, l));
   floor.material.color.set(0xe9dcc6); floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; roomG.add(floor);
   const ceil = new THREE.Mesh(new THREE.PlaneGeometry(w, l), new THREE.MeshStandardMaterial({ color: 0xf7f5f0, roughness: 0.95, emissive: 0xfffaf0, emissiveIntensity: 0.55 }));
-  ceil.rotation.x = Math.PI / 2; ceil.position.y = h; roomG.add(ceil);   // zeigt nach unten: von oben unsichtbar, beim Rumlaufen Decke
-  const lamp = new THREE.Mesh(new THREE.CircleGeometry(0.22, 40), new THREE.MeshBasicMaterial({ color: 0xfff6e2 }));
-  lamp.rotation.x = Math.PI / 2; lamp.position.y = h - 0.004; roomG.add(lamp);   // Deckenleuchte, ebenfalls nur von unten
-  const dg = doorGeom(), wg = winGeom();
+  ceil.rotation.x = Math.PI / 2; ceil.position.y = h; roomG.add(ceil); ceil.material.shadowSide = THREE.DoubleSide; ceilMesh = ceil;   // zeigt nach unten: von oben unsichtbar, beim Rumlaufen Decke
+  const dg = doorGeom(), wgs = winGeoms();
   walls = [];
   const mkWall = (wall, len, pos, rotY, n) => {
     // Wand mit Öffnungen (Tür bis 2,05 m, Fenster 0,9–2,2 m) als Form mit Löchern
@@ -305,22 +321,28 @@ function buildRoom3D() {
     // lokale x-Achse der Wand: N und E laufen mit der Wandkoordinate, S und W gegenläufig (Drehung um Y)
     const flip = wall === 'S' || wall === 'W' ? -1 : 1;
     if (state.room.door.wall === wall) { const c = dg.center * flip, hw = state.room.door.width / 2; const hole = new THREE.Path(); hole.moveTo(c - hw, 0.001); hole.lineTo(c + hw, 0.001); hole.lineTo(c + hw, 2.05); hole.lineTo(c - hw, 2.05); hole.lineTo(c - hw, 0.001); shape.holes.push(hole); }
-    if (wg && state.room.win.wall === wall) { const c = wg.center * flip, hw = state.room.win.width / 2; const hole = new THREE.Path(); hole.moveTo(c - hw, 0.9); hole.lineTo(c + hw, 0.9); hole.lineTo(c + hw, Math.min(h - 0.15, 2.2)); hole.lineTo(c - hw, Math.min(h - 0.15, 2.2)); hole.lineTo(c - hw, 0.9); shape.holes.push(hole); }
+    for (const g2 of wgs) if (g2.wall === wall) { const c = g2.center * flip, hw = g2.width / 2, y0 = Math.max(0.002, g2.sill); const hole = new THREE.Path(); hole.moveTo(c - hw, y0); hole.lineTo(c + hw, y0); hole.lineTo(c + hw, g2.top); hole.lineTo(c - hw, g2.top); hole.lineTo(c - hw, y0); shape.holes.push(hole); }
     const geo = new THREE.ExtrudeGeometry(shape, { depth: t, bevelEnabled: false });
     geo.translate(0, 0, -t / 2);
     const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: 0xfbfaf7, roughness: 0.95 }));
-    m.position.set(...pos); m.rotation.y = rotY; m.receiveShadow = true; m.userData.n = new THREE.Vector3(...n);
+    m.position.set(...pos); m.rotation.y = rotY; m.receiveShadow = true; m.castShadow = LM.on; m.userData.n = new THREE.Vector3(...n);
     roomG.add(m); walls.push(m);
   };
   mkWall('N', w + 2 * t, [0, 0, -l / 2 - t / 2], 0, [0, 0, 1]);
   mkWall('S', w + 2 * t, [0, 0, l / 2 + t / 2], Math.PI, [0, 0, -1]);
   mkWall('W', l, [-w / 2 - t / 2, 0, 0], Math.PI / 2, [1, 0, 0]);
   mkWall('E', l, [w / 2 + t / 2, 0, 0], -Math.PI / 2, [-1, 0, 0]);
-  if (wg) {   // Glas
-    const len = state.room.win.width, glass = new THREE.Mesh(new THREE.PlaneGeometry(len, Math.min(h - 0.15, 2.2) - 0.9), new THREE.MeshStandardMaterial({ color: 0xbfd6e6, transparent: true, opacity: 0.35, roughness: 0.1 }));
-    const [ax, az] = wg.a, [bx, bz] = wg.b; glass.position.set((ax + bx) / 2, 0.9 + (Math.min(h - 0.15, 2.2) - 0.9) / 2, (az + bz) / 2);
-    glass.rotation.y = state.room.win.wall === 'W' || state.room.win.wall === 'E' ? Math.PI / 2 : 0; roomG.add(glass);
+  for (const g2 of wgs) {   // Glas
+    const glass = new THREE.Mesh(new THREE.PlaneGeometry(g2.width, g2.top - g2.sill), new THREE.MeshStandardMaterial({ color: 0xbfd6e6, transparent: true, opacity: 0.35, roughness: 0.1 }));
+    glass.position.set((g2.a[0] + g2.b[0]) / 2, (g2.sill + g2.top) / 2, (g2.a[1] + g2.b[1]) / 2);
+    glass.rotation.y = g2.wall === 'W' || g2.wall === 'E' ? Math.PI / 2 : 0; roomG.add(glass);
   }
+  {   // geschlossene Tür als unsichtbarer Schattenwerfer (Sonne nur durch Fenster)
+    const door = new THREE.Mesh(new THREE.BoxGeometry(state.room.door.width, 2.05, 0.05), new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false }));
+    door.position.set((dg.a[0] + dg.b[0]) / 2, 1.025, (dg.a[1] + dg.b[1]) / 2); door.rotation.y = state.room.door.wall === 'W' || state.room.door.wall === 'E' ? Math.PI / 2 : 0;
+    door.castShadow = true; door.visible = LM.on; roomG.add(door); doorCaster = door;
+  }
+  buildFloorLux(); setRoomCasters(LM.on);
 }
 
 function legMesh(from, to, kind, mat = metal) {
@@ -505,16 +527,27 @@ function buildGlb(it) {
   }
   return g;
 }
-const BUILD = { table: buildTable, sofaL: buildSofaL, sofa: buildSofa, chair: buildChair, bed: buildBed, cabinet: buildCabinet, shelf: buildShelf, rug: buildRug, plant: buildPlant, lamp: buildLamp, glb: buildGlb };
+const BUILD = { table: buildTable, sofaL: buildSofaL, sofa: buildSofa, chair: buildChair, bed: buildBed, cabinet: buildCabinet, shelf: buildShelf, rug: buildRug, plant: buildPlant, lamp: (it) => buildLampLit(it), glb: buildGlb, light: (it) => buildLight(it), tv: (it) => buildTv(it) };
 const meshes = new Map();
 function rebuild(it) {
   const old = meshes.get(it.id); if (old) furnG.remove(old);
   const g = BUILD[BYTYPE[it.type].kind](it);
-  g.userData.id = it.id; g.position.set(it.x, 0, it.z); g.rotation.y = it.rot;
+  g.userData.id = it.id; g.position.set(it.x, elevOf(it), it.z); g.rotation.y = it.rot; lastPose.set(it.id, { x: it.x, z: it.z, rot: it.rot });
   furnG.add(g); meshes.set(it.id, g);
 }
 function rebuildAll() { furnG.clear(); meshes.clear(); state.items.forEach(rebuild); }
-function place(it) { const g = meshes.get(it.id); if (g) { g.position.set(it.x, 0, it.z); g.rotation.y = it.rot; } }
+const lastPose = new Map();
+function place(it) {
+  if (stacks(it)) { const s = supportOf(it); it.on = s ? s.id : null; }   // Tischlampe/Fernseher rastet auf Möbeln ein
+  const g = meshes.get(it.id); if (g) { g.position.set(it.x, elevOf(it), it.z); g.rotation.y = it.rot; }
+  const lp = lastPose.get(it.id);
+  lastPose.set(it.id, { x: it.x, z: it.z, rot: it.rot });
+  if (lp && (lp.x !== it.x || lp.z !== it.z || lp.rot !== it.rot)) {   // daraufstehende Sachen wandern mit
+    const dr = it.rot - lp.rot, c = Math.cos(dr), s = Math.sin(dr);
+    for (const ch of state.items) if (ch.on === it.id && ch !== it) { const rx = ch.x - lp.x, rz = ch.z - lp.z; ch.x = it.x + c * rx + s * rz; ch.z = it.z - s * rx + c * rz; ch.rot += dr; place(ch); }
+  }
+  if (LM.on && isLight(it)) scheduleLux();
+}
 
 // ---------- Prüfungen ----------
 function analyze(it) {
@@ -523,15 +556,15 @@ function analyze(it) {
   const d = { l: Math.min(...xs) + w / 2, r: w / 2 - Math.max(...xs), b: Math.min(...zs) + l / 2, f: l / 2 - Math.max(...zs) };
   let near = null;
   const roleOf = (x) => BYTYPE[x.type].role || BYTYPE[x.type].kind, k1 = roleOf(it);
-  if (!isRug(it)) for (const o of state.items) {
-    if (o.id === it.id || isRug(o)) continue;
+  if (!noCollide(it)) for (const o of state.items) {
+    if (o.id === it.id || noCollide(o) || o.on === it.id || it.on === o.id) continue;
     const k2 = roleOf(o);
     if ((k1 === 'chair' && k2 === 'table') || (k1 === 'table' && k2 === 'chair')) continue;   // Stühle dürfen unter den Tisch
     const dd = polyDist(wf, worldFootprint(o));
     if (!near || dd < near.d) near = { d: dd, name: BYTYPE[o.type].name };
   }
   const inWall = Object.values(d).some((v) => v < -0.005);
-  const door = !isRug(it) && polyDist(wf, doorGeom().sector) < 0;
+  const door = !noCollide(it) && polyDist(wf, doorGeom().sector) < 0;
   return { d, near, inWall, door };
 }
 function problem(it) { const a = analyze(it); return a.inWall || a.door || (a.near && a.near.d < 0); }
@@ -584,10 +617,11 @@ function drawPlan() {
   for (let x = -w / 2 + 0.5; x < w / 2 - 0.01; x += 0.5) { const [px] = P([x, 0]); pctx.moveTo(px, y0); pctx.lineTo(px, y1); }
   for (let z = -l / 2 + 0.5; z < l / 2 - 0.01; z += 0.5) { const [, py] = P([0, z]); pctx.moveTo(x0, py); pctx.lineTo(x1, py); }
   pctx.stroke();
+  drawLightLayer();
   const ts = t * view.s; pctx.fillStyle = ink;   // Wände
   pctx.fillRect(x0 - ts, y0 - ts, x1 - x0 + 2 * ts, ts); pctx.fillRect(x0 - ts, y1, x1 - x0 + 2 * ts, ts);
   pctx.fillRect(x0 - ts, y0, ts, y1 - y0); pctx.fillRect(x1, y0, ts, y1 - y0);
-  const dg = doorGeom(), wg = winGeom(), off = (wall) => ({ N: [0, -ts / 2], S: [0, ts / 2], W: [-ts / 2, 0], E: [ts / 2, 0] }[wall]);
+  const dg = doorGeom(), wgs = winGeoms(), off = (wall) => ({ N: [0, -ts / 2], S: [0, ts / 2], W: [-ts / 2, 0], E: [ts / 2, 0] }[wall]);
   const opening = (a, b, wall, fill) => {
     const [ax, ay] = P(a), [bx, by] = P(b), [ox, oy] = off(wall);
     pctx.save(); pctx.lineCap = 'butt'; pctx.strokeStyle = fill; pctx.lineWidth = ts + 2; pctx.beginPath(); pctx.moveTo(ax + ox, ay + oy); pctx.lineTo(bx + ox, by + oy); pctx.stroke(); pctx.restore();
@@ -596,13 +630,14 @@ function drawPlan() {
   pctx.strokeStyle = ink; pctx.lineWidth = 1.2; pctx.beginPath();   // Türblatt + Schwenkbogen
   const [hx, hy] = P(dg.hinge); const last = P(dg.sector[dg.sector.length - 1]); pctx.moveTo(hx, hy); pctx.lineTo(last[0], last[1]); pctx.stroke();
   pctx.setLineDash([4, 3]); pctx.beginPath(); dg.sector.slice(1).forEach((p, i) => { const [px, py] = P(p); i ? pctx.lineTo(px, py) : pctx.moveTo(px, py); }); pctx.stroke(); pctx.setLineDash([]);
-  if (wg) { opening(wg.a, wg.b, state.room.win.wall, css('--paper')); const [ox, oy] = off(state.room.win.wall); const [ax, ay] = P(wg.a), [bx, by] = P(wg.b);
+  for (const wg of wgs) { opening(wg.a, wg.b, wg.wall, css('--paper')); const [ox, oy] = off(wg.wall); const [ax, ay] = P(wg.a), [bx, by] = P(wg.b);
     pctx.strokeStyle = ink; pctx.lineWidth = 1; for (const k of [-0.25, 0.25]) { pctx.beginPath(); pctx.moveTo(ax + ox + (oy ? 0 : k * ts), ay + oy + (ox ? 0 : k * ts)); pctx.lineTo(bx + ox + (oy ? 0 : k * ts), by + oy + (ox ? 0 : k * ts)); pctx.stroke(); } }
   dimLine([-w / 2, -l / 2], [w / 2, -l / 2], -(ts + 16), fmtM(w), mute);   // Raummaße
   dimLine([-w / 2, l / 2], [-w / 2, -l / 2], -(ts + 16), fmtM(l), mute);
-  const order = [...state.items].sort((a, b) => (isRug(b) ? 1 : 0) - (isRug(a) ? 1 : 0));
+  const lay = (i) => (isRug(i) ? 0 : isLight(i) ? 3 : i.on ? 2 : 1), order = [...state.items].sort((a, b) => lay(a) - lay(b));
   for (const it of order) {
     const wf = worldFootprint(it), sel = it.id === selected, bad1 = problem(it);
+    if (BYTYPE[it.type].kind === 'light') { drawLightSym(it, sel); continue; }
     pctx.beginPath(); wf.forEach((p, i) => { const [px, py] = P(p); i ? pctx.lineTo(px, py) : pctx.moveTo(px, py); }); pctx.closePath();
     pctx.fillStyle = isRug(it) ? 'rgba(160,150,135,0.18)' : (bad1 ? 'rgba(196,50,31,0.18)' : css('--furn'));
     pctx.globalAlpha = isRug(it) ? 1 : 0.92; pctx.fill(); pctx.globalAlpha = 1;
@@ -610,6 +645,7 @@ function drawPlan() {
     const cx = wf.reduce((s, p) => s + p[0], 0) / wf.length, cz = wf.reduce((s, p) => s + p[1], 0) / wf.length, [px, py] = P([cx, cz]);
     const name = BYTYPE[it.type].short || BYTYPE[it.type].name.replace('Esstisch ', '').replace('Ecksofa ', ''), dims = shapeOf(it) === 'round' && !it.opts.ext ? 'Ø' + Math.round(it.d * 100) : Math.round(curLen(it) * 100) + '×' + Math.round(it.d * 100);
     if (Math.min(curLen(it), it.d) * view.s > 34 && (!isRug(it) || sel)) { pctx.fillStyle = ink; pctx.textAlign = 'center'; pctx.font = '500 11px "IBM Plex Sans", Arial, sans-serif'; pctx.fillText(name, px, py - 2); pctx.font = '10px "IBM Plex Mono", Menlo, monospace'; pctx.fillStyle = mute; pctx.fillText(dims, px, py + 11); }
+    if (isLight(it)) drawLightSym(it, sel);
   }
   const it = state.items.find((i) => i.id === selected);   // Abstände des ausgewählten Möbels zu den Wänden
   if (it) {
@@ -619,12 +655,13 @@ function drawPlan() {
     show([-w / 2, mz], [Math.min(...xs), mz], a.d.l); show([Math.max(...xs), mz], [w / 2, mz], a.d.r);
     show([mx, -l / 2], [mx, Math.min(...zs)], a.d.b); show([mx, Math.max(...zs)], [mx, l / 2], a.d.f);
   }
+  drawCompassAndSun();
   drawPlayer();
 }
 
 // ---------- Auswahl & Panel ----------
 function setTab(t) {
-  for (const [b, p] of [['tRoom', 'pRoom'], ['tAdd', 'pAdd'], ['tSel', 'pSel']]) { $(b).setAttribute('aria-selected', b === t); $(p).hidden = b !== t; }
+  for (const [b, p] of [['tRoom', 'pRoom'], ['tAdd', 'pAdd'], ['tSel', 'pSel'], ['tLight', 'pLight']]) { $(b).setAttribute('aria-selected', b === t); $(p).hidden = b !== t; }
 }
 function select(id, openTab = true) {
   selected = id;
@@ -633,7 +670,7 @@ function select(id, openTab = true) {
   if (it) {
     const c = BYTYPE[it.type];
     $('sName').textContent = c.name; $('sNote').textContent = c.note || '';
-    const photo = c.kind === 'glb'; $('hFarbe').hidden = photo; $('swatches').hidden = photo;
+    const photo = c.kind === 'glb' || c.kind === 'light' || c.kind === 'tv'; $('hFarbe').hidden = photo; $('swatches').hidden = photo; fillLightPanel(it);
     const round = shapeOf(it) === 'round';
     $('lW').firstChild.textContent = round ? 'Durchm. cm' : 'Breite cm'; $('lD').hidden = round;
     $('sW').value = Math.round((round ? it.d : it.w) * 100); $('sD').value = Math.round(it.d * 100); $('sH').value = Math.round(it.h * 100);
@@ -641,6 +678,7 @@ function select(id, openTab = true) {
     if (c.kind === 'table' && it.opts.extLen) { o1.hidden = false; o1.textContent = it.opts.ext ? 'Zusammenschieben' : 'Ausziehen'; o1.classList.toggle('on', !!it.opts.ext); }
     if (c.kind === 'sofaL') { o1.hidden = false; o1.textContent = 'Ecke ' + (it.opts.side === 'links' ? 'rechts' : 'links'); o1.classList.remove('on');
       if (it.opts.headrest) { o2.hidden = false; o2.textContent = it.opts.high ? 'Kopfteile runter' : 'Kopfteile hoch'; o2.classList.toggle('on', !!it.opts.high); } }
+    if (c.kind === 'tv') { o1.hidden = o2.hidden = false; o1.classList.remove('on'); o2.classList.remove('on'); o1.textContent = it.opts.mount === 'wall' ? 'Auf Standfuß stellen' : 'An die Wand hängen'; o2.textContent = `${it.opts.inch}″ · Größe ändern`; }
     const sw = $('swatches'); sw.innerHTML = '';
     const opts = (c.kind === 'table' || c.kind === 'cabinet' || c.kind === 'shelf') ? Object.keys(WOODS) : FABRICS;
     for (const col of opts) { const b = document.createElement('button'); b.style.background = WOODS[col] || col; b.title = col; b.setAttribute('aria-pressed', col === it.color); b.onclick = () => { it.color = col; rebuild(it); select(it.id, false); changed(); }; sw.appendChild(b); }
@@ -668,10 +706,10 @@ function drawRings() {
     ringG.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: bad ? 0xc4321f : 0xa8792a })));
   }
 }
-function changed() { save(); refreshInfo(); drawPlan(); drawRings(); }
+function changed() { save(); refreshInfo(); drawPlan(); drawRings(); if (LM.on) scheduleLux(); else if (!$('pLight').hidden) renderLightUi(); }
 
 function catIcon(kind) {
-  const p = { sofaL: 'M3 6h28v8H15v9H3z', sofa: 'M3 8h28v10H3z M3 8v10 M31 8v10', table: 'M17 13m-10 0a10 7 0 1 0 20 0a10 7 0 1 0 -20 0', chair: 'M11 4h12v18H11z', bed: 'M5 3h24v21H5z M5 8h24', cabinet: 'M3 7h28v12H3z M12 7v12 M22 7v12', shelf: 'M5 4h24v18H5z M5 10h24 M5 16h24', rug: 'M4 5h26v16H4z', plant: 'M17 13m-8 0a8 8 0 1 0 16 0a8 8 0 1 0 -16 0', lamp: 'M17 13m-6 0a6 6 0 1 0 12 0a6 6 0 1 0 -12 0' }[kind] || 'M4 5h26v16H4z';
+  const p = { light: 'M17 13m-8 0a8 8 0 1 0 16 0a8 8 0 1 0 -16 0 M11.5 7.5l11 11 M22.5 7.5l-11 11', tv: 'M4 4h26v15H4z M12 23h10', sofaL: 'M3 6h28v8H15v9H3z', sofa: 'M3 8h28v10H3z M3 8v10 M31 8v10', table: 'M17 13m-10 0a10 7 0 1 0 20 0a10 7 0 1 0 -20 0', chair: 'M11 4h12v18H11z', bed: 'M5 3h24v21H5z M5 8h24', cabinet: 'M3 7h28v12H3z M12 7v12 M22 7v12', shelf: 'M5 4h24v18H5z M5 10h24 M5 16h24', rug: 'M4 5h26v16H4z', plant: 'M17 13m-8 0a8 8 0 1 0 16 0a8 8 0 1 0 -16 0', lamp: 'M17 13m-6 0a6 6 0 1 0 12 0a6 6 0 1 0 -12 0' }[kind] || 'M4 5h26v16H4z';
   return `<svg viewBox="0 0 34 26" aria-hidden="true"><path d="${p}" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>`;
 }
 function buildCatalog() {
@@ -699,29 +737,26 @@ $('sD').onchange = () => { const it = itemSel(); if (!it) return; it.d = Math.ma
 $('sH').onchange = () => { const it = itemSel(); if (!it) return; it.h = Math.max(0.01, +$('sH').value / 100); rebuild(it); changed(); };
 function rotate(deg) { const it = itemSel(); if (!it) return; it.rot += THREE.MathUtils.degToRad(deg); clamp(it); place(it); changed(); }
 $('rotL').onclick = () => rotate(15); $('rotR').onclick = () => rotate(-15); $('rot90').onclick = () => rotate(-90);
-$('opt1').onclick = () => { const it = itemSel(); if (!it) return; const k = BYTYPE[it.type].kind; if (k === 'table') it.opts.ext = !it.opts.ext; else if (k === 'sofaL') it.opts.side = it.opts.side === 'links' ? 'rechts' : 'links'; clamp(it, false); rebuild(it); select(it.id, false); changed(); };
-$('opt2').onclick = () => { const it = itemSel(); if (!it) return; it.opts.high = !it.opts.high; rebuild(it); select(it.id, false); changed(); };
+$('opt1').onclick = () => { const it = itemSel(); if (!it) return; const k = BYTYPE[it.type].kind; if (k === 'table') it.opts.ext = !it.opts.ext; else if (k === 'sofaL') it.opts.side = it.opts.side === 'links' ? 'rechts' : 'links'; else if (k === 'tv') { it.opts.mount = it.opts.mount === 'wall' ? 'stand' : 'wall'; it.on = null; setTvSize(it); } clamp(it, false); rebuild(it); select(it.id, false); changed(); };
+$('opt2').onclick = () => { const it = itemSel(); if (!it) return; if (BYTYPE[it.type].kind === 'tv') { const S = [43, 50, 55, 65, 75, 85]; it.opts.inch = S[(S.indexOf(it.opts.inch) + 1) % S.length]; setTvSize(it); } else it.opts.high = !it.opts.high; rebuild(it); select(it.id, false); changed(); };
 $('dup').onclick = () => { const it = itemSel(); if (!it) return; const n = { ...JSON.parse(JSON.stringify(it)), id: 'm' + uid++, x: it.x + 0.3, z: it.z + 0.3 }; state.items.push(n); clamp(n, false); rebuild(n); select(n.id); changed(); };
-$('del').onclick = () => { const it = itemSel(); if (!it) return; state.items = state.items.filter((i) => i !== it); const g = meshes.get(it.id); if (g) furnG.remove(g); meshes.delete(it.id); select(null); setTab('tAdd'); changed(); };
+$('del').onclick = () => { const it = itemSel(); if (!it) return; state.items = state.items.filter((i) => i !== it); const g = meshes.get(it.id); if (g) furnG.remove(g); meshes.delete(it.id); for (const ch of state.items) if (ch.on === it.id) { ch.on = null; place(ch); } select(null); setTab('tAdd'); changed(); };
 function roomInputs() {
   const r = state.room; $('rw').value = r.w.toFixed(2); $('rl').value = r.l.toFixed(2); $('rh').value = r.h.toFixed(2);
   $('dWall').value = r.door.wall; $('dWidth').value = r.door.width.toFixed(2); $('dPos').value = r.door.pos;
-  $('wWall').value = r.win ? r.win.wall : '-'; $('wWidth').value = (r.win ? r.win.width : 1.2).toFixed(2); $('wPos').value = r.win ? r.win.pos : 0.5;
+  renderWinList(); $('lNorth').value = Math.round(r.north || 0);
 }
-function roomChanged() { buildRoom3D(); state.items.forEach((it) => { clamp(it, false); place(it); }); planSize(); fitCamera(); changed(); }
+function roomChanged() { buildRoom3D(); state.items.forEach((it) => { clamp(it, false); if (isLight(it)) rebuild(it); else place(it); }); planSize(); if (!walk.on) fitCamera(); changed(); }
 for (const id of ['rw', 'rl', 'rh']) $(id).onchange = () => { const r = state.room; r.w = Math.min(15, Math.max(1.5, +$('rw').value || r.w)); r.l = Math.min(15, Math.max(1.5, +$('rl').value || r.l)); r.h = Math.min(4.5, Math.max(2, +$('rh').value || r.h)); roomInputs(); roomChanged(); };
 $('dWall').onchange = () => { state.room.door.wall = $('dWall').value; roomChanged(); };
 $('dWidth').onchange = () => { state.room.door.width = Math.min(2, Math.max(0.6, +$('dWidth').value || 0.9)); roomChanged(); };
 $('dPos').oninput = () => { state.room.door.pos = +$('dPos').value; roomChanged(); };
-$('wWall').onchange = () => { const v = $('wWall').value; state.room.win = v === '-' ? { wall: '-', pos: 0.5, width: 1.2 } : { ...(state.room.win || { pos: 0.5, width: 1.2 }), wall: v }; roomChanged(); };
-$('wWidth').onchange = () => { if (state.room.win) state.room.win.width = Math.min(5, Math.max(0.4, +$('wWidth').value || 1.2)); roomChanged(); };
-$('wPos').oninput = () => { if (state.room.win) state.room.win.pos = +$('wPos').value; roomChanged(); };
 let clearArmed = false;
 $('clearAll').onclick = () => {
   if (!clearArmed) { clearArmed = true; $('clearAll').textContent = 'Wirklich alle entfernen?'; $('clearNote').hidden = false; $('clearNote').textContent = 'Noch einmal tippen zum Bestätigen.'; setTimeout(() => { clearArmed = false; $('clearAll').textContent = 'Alle Möbel entfernen'; $('clearNote').hidden = true; }, 4000); return; }
   clearArmed = false; state.items = []; rebuildAll(); select(null); $('clearAll').textContent = 'Alle Möbel entfernen'; $('clearNote').hidden = true; changed();
 };
-$('resetEx').onclick = () => { state = example(); beforeShow = null; const sb = $('showBtn'); if (sb) sb.textContent = 'Showroom einrichten'; roomInputs(); buildRoom3D(); rebuildAll(); planSize(); select(null); changed(); updatePhase(); };
+$('resetEx').onclick = () => { state = example(); normRoom(state.room); beforeShow = null; const sb = $('showBtn'); if (sb) sb.textContent = 'Showroom einrichten'; roomInputs(); buildRoom3D(); rebuildAll(); planSize(); select(null); changed(); updatePhase(); };
 $('tRoom').onclick = () => setTab('tRoom'); $('tAdd').onclick = () => setTab('tAdd'); $('tSel').onclick = () => setTab('tSel');
 addEventListener('keydown', (e) => {
   if (walk.on) return;
@@ -740,7 +775,8 @@ renderer.domElement.addEventListener('pointerdown', (e) => {
   if (walk.on) return;
   ptr3(e);
   const hits = ray.intersectObjects(furnG.children, true);
-  let hit = hits.find((h) => { let o = h.object; while (o && !o.userData.id) o = o.parent; return o && !isRug(state.items.find((i) => i.id === o.userData.id)); }) || hits[0];
+  const itemOf = (h) => { let o = h.object; while (o && !o.userData.id) o = o.parent; return o && state.items.find((i) => i.id === o.userData.id); };
+  let hit = hits.find((h) => { const i = itemOf(h); return i && !isRug(i) && !overhead(i); }) || hits.find((h) => { const i = itemOf(h); return i && !isRug(i); }) || hits[0];
   if (!hit) return;
   let o = hit.object; while (o && !o.userData.id) o = o.parent; if (!o) return;
   const it = state.items.find((i) => i.id === o.userData.id); select(it.id);
@@ -758,8 +794,8 @@ renderer.domElement.addEventListener('pointerup', end3); renderer.domElement.add
 let drag2 = null;
 plan.addEventListener('pointerdown', (e) => {
   const r = plan.getBoundingClientRect(), p = W2(e.clientX - r.left, e.clientY - r.top);
-  const order = [...state.items].sort((a, b) => (isRug(a) ? 1 : 0) - (isRug(b) ? 1 : 0));
-  const it = order.find((i) => inside(p, worldFootprint(i)));
+  const lay = (i) => (BYTYPE[i.type].kind === 'light' ? 0 : i.on ? 1 : isRug(i) ? 3 : 2), order = [...state.items].sort((a, b) => lay(a) - lay(b));
+  const it = order.find((i) => (BYTYPE[i.type].kind === 'light' ? Math.hypot(p[0] - i.x, p[1] - i.z) <= Math.max(0.12, 11 / view.s) : inside(p, worldFootprint(i))));
   if (!it) { select(null, false); return; }
   select(it.id); drag2 = { it, dx: it.x - p[0], dz: it.z - p[1] }; plan.setPointerCapture(e.pointerId);
 });
@@ -773,6 +809,7 @@ plan.addEventListener('pointerup', end2); plan.addEventListener('pointercancel',
 // ---------- Showroom-Knopf ----------
 let showArmed = false;
 function applyState() {
+  normRoom(state.room);
   uid = Math.max(uid, 1 + Math.max(0, ...state.items.map((i) => +String(i.id).slice(1) || 0)));
   roomInputs(); buildRoom3D(); rebuildAll(); planSize(); if (!walk.on) fitCamera(); select(null); changed(); updatePhase();
   if (walk.on) { const s = startPose(); walk.seat = null; walk.anim = null; walk.pos.set(s.x, EYE, s.z); walk.yaw = s.yaw; }
@@ -806,7 +843,7 @@ function free(x, z, r = RADIUS + 0.02) {   // Kreis frei von Wänden und Möbeln
   const { w, l } = state.room;
   if (Math.abs(x) > w / 2 - r || Math.abs(z) > l / 2 - r) return false;
   for (const it of state.items) {
-    if (isRug(it)) continue;
+    if (noCollide(it)) continue;
     const poly = worldFootprint(it);
     if (inside([x, z], poly)) return false;
     for (let i = 0; i < poly.length; i++) if (segDist([x, z], poly[i], poly[(i + 1) % poly.length]) < r) return false;
@@ -830,7 +867,7 @@ function closestOnSeg(p, a, b) {
 }
 function collide(p) {   // Kreis (Radius 25 cm) aus Möbel-Umrissen und Wänden schieben → man gleitet an Kanten entlang
   const { w, l } = state.room, r = RADIUS;
-  const polys = state.items.filter((it) => !isRug(it)).map((it) => worldFootprint(it));
+  const polys = state.items.filter((it) => !noCollide(it)).map((it) => worldFootprint(it));
   for (let iter = 0; iter < 3; iter++) {
     for (const poly of polys) {
       const q = [p.x, p.z]; let best = null, bd = Infinity;
@@ -866,7 +903,7 @@ function seatPose(t) {   // Augenpunkt beim Sitzen/Liegen (lokal: Rücken bei �
 function pickSeat() {   // Möbel in der Bildmitte, höchstens 2,2 m entfernt
   const near = [];
   for (const it of state.items) {
-    if (isRug(it)) continue;
+    if (isRug(it) || overhead(it)) continue;
     const g = meshes.get(it.id); if (!g) continue;
     const bb = bbox(worldFootprint(it)), gx = Math.max(bb[0] - walk.pos.x, 0, walk.pos.x - bb[1]), gz = Math.max(bb[2] - walk.pos.z, 0, walk.pos.z - bb[3]);
     if (Math.hypot(gx, gz) < 2.2) near.push(g);
@@ -980,7 +1017,7 @@ function enterWalk() {
   walk.pos.set(s.x, EYE, s.z);
   document.body.classList.add('walking'); document.body.classList.toggle('touchwalk', walk.touch);
   $('walkUi').hidden = false; $('joy').hidden = !walk.touch; $('walkPause').hidden = true; $('walkBtn').textContent = 'Beenden';
-  controls.enabled = false; scene.background = new THREE.Color(0xdde8f2); $('walkBtn').blur();   // Leertaste soll nicht den Knopf auslösen
+  controls.enabled = false; applyBg(); $('walkBtn').blur();   // Leertaste soll nicht den Knopf auslösen
   requestAnimationFrame(resize);
   if (!walk.touch) lockPointer();
   updateWalkHint();
@@ -1060,8 +1097,581 @@ if (qs.has('test')) window.__plan = {   // nur für automatische Tests (?test)
   joy(x, y, ms) { walk.joy = { id: -99, cx: 0, cy: 0, x, y }; $('joyKnob').style.transform = `translate(${x * 50}px, ${y * 50}px)`; setTimeout(() => { walk.joy = null; $('joyKnob').style.transform = ''; }, ms); return 'ok'; },
   showroom() { beforeShow = null; state = showroom(); applyState(); return state.items.length; },
   example() { $('resetEx').click(); return state.items.length; },
+  light(o) { Object.assign(LM, o); saveLM(); setLightMode(LM.on); return `Ø ${Math.round(LUX.avg)} lx, min ${Math.round(LUX.min)} lx, Sonne ${LUX.sunArea.toFixed(2)} m², Höhe ${(LUX.sun.alt / DEG).toFixed(1)}°, Azimut ${(LUX.sun.az / DEG).toFixed(0)}°, Belichtung ${LUX.expo.toFixed(4)}`; },
+  luxAt: (x, z) => Math.round(luxAt(x, z, LUX.D, LUX.lamps)),
+  tab: (t) => { $(t).click(); return t; },
+  add(type, x, z, rot = 0) { const it = newItem(type, x, z, rot); state.items.push(it); clamp(it, false); rebuild(it); place(it); changed(); return it.id; },
+  move(id, x, z, rot) { const it = state.items.find((i) => i.id === id); it.x = x; it.z = z; if (rot != null) it.rot = rot; place(it); changed(); return 'ok'; },
+  info(id) { const it = state.items.find((i) => i.id === id); return [it.type, it.x.toFixed(2), it.z.toFixed(2), 'auf=' + (it.on || '-'), 'höhe=' + elevOf(it).toFixed(2)].join(' '); },
+  sel(id) { select(id); return id; },
   count: () => state.items.length + ' Möbel, Raum ' + state.room.w + '×' + state.room.l + ', Knopf: ' + ($('showBtn') || {}).textContent,
 };
+
+// ---------- Licht: Sonne, Lampen, Helligkeit (Lux) – Schätzung, keine echte Lichtberechnung ----------
+const LKEY = 'mycasa3-licht-v1';
+const PLACES = { augsburg: { name: 'Augsburg', lat: 48.3705, lon: 10.8978 }, muenchen: { name: 'München', lat: 48.1374, lon: 11.5755 } };
+const REFL = { wall: 0.7, ceil: 0.8, floor: 0.3 }, TAU = 0.65, RHO_G = 0.2, DEG = Math.PI / 180;
+const RF_LOW = 0.4, RF_HIGH = 0.75, FURN = 0.85;   // erste Reflexion unten (Boden + untere Wände) / oben (Decke + obere Wände); Verlust durch Möbel und Fenster
+const pad2 = (n) => String(n).padStart(2, '0');
+const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; };
+const LM = Object.assign({ on: false, lux: false, place: 'augsburg', lat: 48.3705, lon: 10.8978, date: '', min: 14 * 60, sky: 'klar', plane: 0.8, seen: false },
+  (() => { try { return JSON.parse(localStorage.getItem(LKEY) || '{}'); } catch (e) { return {}; } })());
+if (!/^\d{4}-\d\d-\d\d$/.test(LM.date)) LM.date = todayStr();
+function saveLM() { try { localStorage.setItem(LKEY, JSON.stringify(LM)); } catch (e) { /* egal */ } }
+const fmtLux = (E) => (E >= 10000 ? (E / 1000).toFixed(0).replace('.', ',') + ' klx' : E >= 1000 ? (E / 1000).toFixed(1).replace('.', ',') + ' klx' : Math.round(E) + ' lx');
+const fmtMin = (m) => `${pad2(Math.floor(m / 60) % 24)}:${pad2(Math.round(m % 60))}`;
+function simDate(min = LM.min) { const [y, m, d] = LM.date.split('-').map(Number); return new Date(y, m - 1, d, 0, min); }   // Zeitzone des Geräts
+
+// Sonnenstand (Näherung des Astronomical Almanac, ca. 0,1° genau): Höhe und Azimut (ab Nord, im Uhrzeigersinn)
+function sunPos(t, lat, lon) {
+  const n = t.getTime() / 86400000 + 2440587.5 - 2451545.0;
+  const L = (280.460 + 0.9856474 * n) % 360, g = ((357.528 + 0.9856003 * n) % 360) * DEG;
+  const lam = (L + 1.915 * Math.sin(g) + 0.020 * Math.sin(2 * g)) * DEG, eps = (23.439 - 0.0000004 * n) * DEG;
+  const ra = Math.atan2(Math.cos(eps) * Math.sin(lam), Math.cos(lam)), dec = Math.asin(Math.sin(eps) * Math.sin(lam));
+  const H = ((18.697374558 + 24.06570982441908 * n) * 15 + lon) * DEG - ra, la = lat * DEG;
+  let alt = Math.asin(Math.sin(la) * Math.sin(dec) + Math.cos(la) * Math.cos(dec) * Math.cos(H));
+  const az = Math.atan2(-Math.sin(H), Math.tan(dec) * Math.cos(la) - Math.sin(la) * Math.cos(H));
+  const ad = alt / DEG; if (ad > -1.5) alt += (1.02 / Math.tan((ad + 10.3 / (ad + 5.11)) * DEG)) / 60 * DEG;   // Lichtbrechung am Horizont
+  return { alt, az: (az + 2 * Math.PI) % (2 * Math.PI) };
+}
+function sunTimes() {   // Auf-/Untergang (Oberrand, −0,833°) per Abtasten in 2-min-Schritten
+  let rise = null, set = null, prev = null, noon = 0, best = -9;
+  for (let mi = 0; mi <= 1440; mi += 2) {
+    const a = sunPos(simDate(mi), LM.lat, LM.lon).alt / DEG;
+    if (prev !== null) { if (prev < -0.833 && a >= -0.833 && rise === null) rise = mi; if (prev >= -0.833 && a < -0.833) set = mi; }
+    if (a > best) { best = a; noon = mi; }
+    prev = a;
+  }
+  return { rise, set, noon, maxAlt: best };
+}
+function compassDirs() {   // Osten/Norden als Richtungen im Grundriss (x, z); Norden = state.room.north Grad im Uhrzeigersinn von „oben“
+  const th = (state.room.north || 0) * DEG;
+  return { E: [Math.cos(th), Math.sin(th)], N: [Math.sin(th), -Math.cos(th)] };
+}
+function sunDirW(alt, az) {   // Richtung zur Sonne in Weltkoordinaten
+  const { E, N } = compassDirs(), ce = Math.sin(az) * Math.cos(alt), cn = Math.cos(az) * Math.cos(alt);
+  return new THREE.Vector3(E[0] * ce + N[0] * cn, Math.sin(alt), E[1] * ce + N[1] * cn);
+}
+const azName = (az) => ['Nord', 'Nordost', 'Ost', 'Südost', 'Süd', 'Südwest', 'West', 'Nordwest'][Math.round(az / DEG / 45) % 8];
+function outdoor(alt) {   // Außenbeleuchtungsstärken in lx: dn = Direktsonne senkrecht, dh = Himmel horizontal, gh = gesamt horizontal
+  const s = Math.sin(alt), hd = alt / DEG;
+  if (hd <= -6) { const dh = hd > -18 ? 2 * Math.pow(10, (hd + 6) / 3) : 0.001; return { dn: 0, dh, gh: dh }; }
+  if (hd <= 0) { const dh = 400 * Math.pow(10, hd / 2.6); return { dn: 0, dh, gh: dh }; }   // Dämmerung
+  if (LM.sky === 'bedeckt') { const dh = 400 + 21000 * s; return { dn: 0, dh, gh: dh }; }   // CIE-bedeckter Himmel
+  const dn = 127500 * Math.exp(-0.21 / Math.max(s, 0.02)), dh = 400 + 13000 * Math.pow(s, 0.65);
+  return { dn, dh, gh: dh + dn * s };
+}
+const K_COL = { 2700: 0xffd3a8, 3000: 0xffdcb8, 4000: 0xffeedd };
+const kColor = (k) => K_COL[k] || K_COL[3000];
+
+// ---------- Lichtquellen ----------
+// (Funktionsdeklarationen: showroom() braucht sie schon beim Laden)
+function isLight(it) { return !!BYTYPE[it.type].L; }
+function mountOf(it) { return (BYTYPE[it.type].L || {}).mount; }
+function overhead(it) { return ['ceiling', 'pendant', 'wall', 'marker'].includes(mountOf(it)); }
+function isTv(it) { return BYTYPE[it.type].kind === 'tv'; }
+function stacks(it) { return mountOf(it) === 'table' || (isTv(it) && it.opts.mount !== 'wall'); }
+function noCollide(it) { return BYTYPE[it.type].kind === 'rug' || overhead(it) || (stacks(it) && !!it.on) || (isTv(it) && it.opts.mount === 'wall'); }
+function tvDims(it) { const dg = (it.opts.inch || 65) * 0.0254; return { sw: dg * 0.8716, sh: dg * 0.4903 }; }
+function supportOf(it, items = state.items) {   // höchstes Möbel mit ebener Oberseite unter der Mitte (Tischlampe, Fernseher)
+  let best = null;
+  for (const o of items) {
+    if (o === it || o.on === it.id || noCollide(o) || isLight(o) || isTv(o)) continue;
+    const c = BYTYPE[o.type], k = c.role || c.kind;
+    if (!(k === 'table' || k === 'cabinet' || k === 'shelf' || (c.kind === 'glb' && /schrank|sideboard|kommode/i.test(c.name)))) continue;
+    if (!inside([it.x, it.z], worldFootprint(o))) continue;
+    if (!best || o.h > best.h) best = o;
+  }
+  return best;
+}
+function elevOf(it) {
+  if (isTv(it) && it.opts.mount === 'wall') return Math.max(0, 1.15 - tvDims(it).sh / 2);   // Bildmitte auf 1,15 m
+  if (!stacks(it) || !it.on) return 0;
+  const s = state.items.find((o) => o.id === it.on);
+  return s ? s.h : 0;
+}
+function lightY(it) {   // Höhe der Lichtquelle über dem Boden
+  const L = BYTYPE[it.type].L, h = state.room.h;
+  if (L.mount === 'ceiling') return it.lz != null ? it.lz : h - (L.mode === 'spot' ? 0.02 : 0.07);
+  if (L.mount === 'pendant') return it.lz != null ? it.lz : L.lz;
+  if (L.mount === 'wall') return it.lz != null ? it.lz : L.lz;
+  if (L.mount === 'floor') return it.lz != null ? it.lz : Math.max(0.3, it.h - 0.18);
+  if (L.mount === 'table') return it.lz != null ? it.lz : elevOf(it) + Math.max(0.15, it.h - 0.12);
+  return it.lz != null ? it.lz : h - 0.05;   // markiert: an der Decke
+}
+function lightOf(it) {
+  const c = BYTYPE[it.type], L = c.L, mode = it.mode || L.mode, beam = it.beam || L.beam || 36, lm = it.lm != null ? it.lm : L.lm;
+  const o = { it, x: it.x, z: it.z, y: lightY(it), lm, k: it.k || L.k, on: !it.off, mode, beam };
+  if (mode === 'spot') { o.m = Math.log(0.5) / Math.log(Math.cos((beam / 2) * DEG)); o.I0 = (lm * (o.m + 1)) / (2 * Math.PI); }
+  return o;
+}
+function lampE(L, x, y, z) {   // direkte Beleuchtungsstärke auf waagrechter Fläche (lx), Punktquelle
+  const dx = x - L.x, dy = L.y - y, dz = z - L.z;
+  if (dy <= 0.02) return 0;   // Lampe liegt unter der Messfläche
+  const d2 = dx * dx + dy * dy + dz * dz, c = dy / Math.sqrt(d2);
+  const I = L.mode === 'omni' ? L.lm / (4 * Math.PI) : L.mode === 'down' ? (L.lm / Math.PI) * c : L.I0 * Math.pow(c, L.m);
+  return (I * c) / d2;
+}
+function lampRadius(L, y) {   // Abstand, bis zu dem die Lampe allein ≥ 100 lx bringt (für den Ring im Grundriss)
+  if (lampE(L, L.x, y, L.z) < 100) return 0;
+  let lo = 0, hi = 8;
+  for (let i = 0; i < 24; i++) { const m = (lo + hi) / 2; if (lampE(L, L.x + m, y, L.z) >= 100) lo = m; else hi = m; }
+  return lo;
+}
+
+// ---------- Fenster (mehrere) ----------
+function normRoom(r) {
+  if (!r) return r;
+  if (!Array.isArray(r.wins)) r.wins = r.win && r.win.wall && r.win.wall !== '-' ? [{ wall: r.win.wall, pos: r.win.pos != null ? r.win.pos : 0.5, width: r.win.width || 1.2, height: 1.3, sill: 0.9 }] : [];
+  delete r.win;
+  for (const wi of r.wins) { if (wi.height == null) wi.height = 1.3; if (wi.sill == null) wi.sill = 0.9; }
+  if (r.north == null) r.north = 0;
+  return r;
+}
+function winGeoms() {
+  const { w, l, h } = state.room;
+  return (state.room.wins || []).map((wi, i) => {
+    const L = wallLen(wi.wall), width = Math.min(wi.width, L - 0.1), half = width / 2;
+    const c = Math.min(L / 2 - half - 0.05, Math.max(-L / 2 + half + 0.05, (wi.pos - 0.5) * L));
+    const map = { N: (t) => [t, -l / 2], S: (t) => [t, l / 2], W: (t) => [-w / 2, t], E: (t) => [w / 2, t] }[wi.wall];
+    const sill = Math.max(0, Math.min(h - 0.3, wi.sill)), top = Math.max(sill + 0.2, Math.min(h - 0.05, sill + wi.height));
+    const nOut = { N: [0, -1], S: [0, 1], W: [-1, 0], E: [1, 0] }[wi.wall];
+    return { i, wall: wi.wall, a: map(c - half), b: map(c + half), center: c, width, sill, top, nOut };
+  });
+}
+
+// ---------- Helligkeit berechnen (Raster 10 cm) ----------
+const LUX = { nx: 0, nz: 0, vals: null, sunm: null, avg: 0, min: 0, avgAmb: 0, expo: 1, sun: null, out: null, sunPolys: [], sunArea: 0, ir: 0, t: null, night: false };
+const luxCanvas = document.createElement('canvas');
+function clipPoly(poly, w, l) {   // Sutherland–Hodgman am Raumrechteck
+  const edges = [[(p) => p[0] >= -w / 2, (a, b) => { const t = (-w / 2 - a[0]) / (b[0] - a[0]); return [-w / 2, a[1] + t * (b[1] - a[1])]; }],
+    [(p) => p[0] <= w / 2, (a, b) => { const t = (w / 2 - a[0]) / (b[0] - a[0]); return [w / 2, a[1] + t * (b[1] - a[1])]; }],
+    [(p) => p[1] >= -l / 2, (a, b) => { const t = (-l / 2 - a[1]) / (b[1] - a[1]); return [a[0] + t * (b[0] - a[0]), -l / 2]; }],
+    [(p) => p[1] <= l / 2, (a, b) => { const t = (l / 2 - a[1]) / (b[1] - a[1]); return [a[0] + t * (b[0] - a[0]), l / 2]; }]];
+  let out = poly;
+  for (const [inn, cut] of edges) {
+    const src = out; out = [];
+    for (let i = 0; i < src.length; i++) {
+      const a = src[i], b = src[(i + 1) % src.length], ia = inn(a), ib = inn(b);
+      if (ia) out.push(a); if (ia !== ib) out.push(cut(a, b));
+    }
+    if (!out.length) break;
+  }
+  return out;
+}
+function polyArea(p) { let s = 0; for (let i = 0; i < p.length; i++) { const a = p[i], b = p[(i + 1) % p.length]; s += a[0] * b[1] - b[0] * a[1]; } return Math.abs(s) / 2; }
+function projSA(pts, rx, ry, rz) {   // projizierter Raumwinkel eines Polygons für eine waagrechte Fläche (Lambert)
+  let s = 0;
+  for (let i = 0; i < pts.length; i++) {
+    const a = pts[i], b = pts[(i + 1) % pts.length];
+    const ax = a[0] - rx, ay = a[1] - ry, az = a[2] - rz, bx = b[0] - rx, by = b[1] - ry, bz = b[2] - rz;
+    const cos = (ax * bx + ay * by + az * bz) / (Math.hypot(ax, ay, az) * Math.hypot(bx, by, bz));
+    const cx = ay * bz - az * by, cy = az * bx - ax * bz, cz = ax * by - ay * bx, lc = Math.hypot(cx, cy, cz) || 1e-12;
+    s += Math.acos(Math.max(-1, Math.min(1, cos))) * (cy / lc);
+  }
+  return Math.abs(s) / 2;
+}
+function daylightSetup() {   // Fenster-Rechtecke, Himmelsleuchtdichte, Sonnenflecken, Tageslicht-Lichtstrom
+  const { w, l } = state.room, yP = LM.plane, t = simDate(), sp = sunPos(t, LM.lat, LM.lon), dir = sunDirW(sp.alt, sp.az), out = outdoor(sp.alt);
+  const sh = Math.hypot(dir.x, dir.z) > 1e-6 ? [dir.x / Math.hypot(dir.x, dir.z), dir.z / Math.hypot(dir.x, dir.z)] : [0, 0];
+  const rects = [], polys = []; let flux = 0;
+  for (const g of winGeoms()) {
+    const facing = g.nOut[0] * sh[0] + g.nOut[1] * sh[1];   // cos des Winkels Fensternormale ↔ Sonne (waagrecht)
+    const f = LM.sky === 'bedeckt' ? 0.7 : 0.45 + 0.5 * Math.max(0, facing) ** 2;   // Himmelsleuchtdichte im Fenster relativ zu E_h/π
+    const lo = Math.max(g.sill, yP + 0.001);
+    if (g.top > lo) rects.push({ L: (TAU * f * out.dh) / Math.PI, pts: [[g.a[0], lo, g.a[1]], [g.b[0], lo, g.b[1]], [g.b[0], g.top, g.b[1]], [g.a[0], g.top, g.a[1]]] });
+    const area = g.width * (g.top - g.sill), cosInc = Math.cos(sp.alt) * Math.max(0, facing);
+    const vSky = (LM.sky === 'bedeckt' ? 0.4 : 0.5 * (0.6 + 0.8 * Math.max(0, facing))) * out.dh;
+    flux += TAU * area * (vSky * RF_LOW + 0.5 * RHO_G * out.gh * RF_HIGH + out.dn * cosInc * REFL.floor);   // erstmals reflektierter Lichtstrom
+    if (out.dn > 0 && sp.alt > 0 && facing > 0.01 && dir.y > 0.01) {   // Sonnenfleck: Fensterecken entlang der Sonnenstrahlen auf die Messfläche
+      const proj = (x, y, z) => { const k = (y - yP) / dir.y; return [x - dir.x * k, z - dir.z * k]; };
+      const hiY = g.top, loY = Math.max(g.sill, yP);
+      if (hiY > loY) {
+        const p = clipPoly([proj(g.a[0], loY, g.a[1]), proj(g.b[0], loY, g.b[1]), proj(g.b[0], hiY, g.b[1]), proj(g.a[0], hiY, g.a[1])], w, l);
+        if (p.length >= 3) polys.push(p);
+      }
+    }
+  }
+  return { sp, dir, out, rects, polys, flux, t };
+}
+function luxAt(x, z, D, lamps) {   // ohne Direktsonne
+  const yP = LM.plane; let E = LUX.ir;
+  for (const L of lamps) E += lampE(L, x, yP, z);
+  for (const r of D.rects) E += r.L * projSA(r.pts, x, yP, z);
+  return E;
+}
+function computeLux() {
+  const { w, l, h } = state.room, cell = 0.1, nx = Math.max(2, Math.round(w / cell)), nz = Math.max(2, Math.round(l / cell));
+  const D = daylightSetup(), lamps = state.items.filter(isLight).map(lightOf).filter((L) => L.on);
+  const As = 2 * w * l + 2 * (w + l) * h, rho = (w * l * (REFL.floor + REFL.ceil) + 2 * (w + l) * h * REFL.wall) / As;
+  const lampFirst = lamps.reduce((s, L) => s + L.lm * (L.mode === 'omni' ? rho : RF_LOW), 0);
+  LUX.ir = (D.flux + lampFirst) / (As * (1 - FURN * rho));   // gemittelte Reflexionen (Split-Flux-Ansatz, grob)
+  const vals = new Float32Array(nx * nz), sunm = new Uint8Array(nx * nz);
+  let sum = 0, mn = Infinity, sumAmb = 0;
+  for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
+    const x = -w / 2 + (i + 0.5) * cell, z = -l / 2 + (j + 0.5) * cell, k = j * nx + i;
+    let Esky = 0; for (const r of D.rects) Esky += r.L * projSA(r.pts, x, LM.plane, z);
+    let Elamp = 0; for (const L of lamps) Elamp += lampE(L, x, LM.plane, z);
+    const E = LUX.ir + Esky + Elamp; vals[k] = E; sum += E; sumAmb += LUX.ir + Esky; if (E < mn) mn = E;
+    for (const p of D.polys) if (inside([x, z], p)) { sunm[k] = 1; break; }
+  }
+  Object.assign(LUX, { nx, nz, vals, sunm, avg: sum / (nx * nz), min: mn, avgAmb: sumAmb / (nx * nz), sun: D.sp, dir: D.dir, out: D.out, sunPolys: D.polys, D, lamps, t: D.t,
+    sunArea: D.polys.reduce((s, p) => s + polyArea(p), 0), sunE: D.out.dn * TAU * Math.max(0, Math.sin(D.sp.alt)), night: D.sp.alt < -3 * DEG });
+  LUX.expo = 1.15 / Math.max(LUX.avg, 25);   // „Augenanpassung“ für die 3D-Ansicht
+  // Bild der Helligkeit (1 Pixel = 10 cm)
+  luxCanvas.width = nx; luxCanvas.height = nz;
+  const cx = luxCanvas.getContext('2d'), img = cx.createImageData(nx, nz);
+  for (let k = 0; k < nx * nz; k++) {
+    const c = sunm[k] ? [255, 246, 196] : luxColor(vals[k]);
+    img.data[k * 4] = c[0]; img.data[k * 4 + 1] = c[1]; img.data[k * 4 + 2] = c[2]; img.data[k * 4 + 3] = 255;
+  }
+  cx.putImageData(img, 0, 0);
+  if (floorLux) { floorLux.material.map.needsUpdate = true; }
+}
+const LUX_STOPS = [[5, [34, 30, 74]], [50, [66, 52, 150]], [100, [40, 110, 205]], [200, [32, 165, 175]], [300, [88, 185, 95]], [500, [236, 210, 64]], [1000, [245, 150, 45]], [3000, [228, 82, 50]]];
+function luxColor(E) {
+  const v = Math.log10(Math.max(E, 1));
+  if (v <= Math.log10(LUX_STOPS[0][0])) return LUX_STOPS[0][1];
+  for (let i = 1; i < LUX_STOPS.length; i++) {
+    const a = Math.log10(LUX_STOPS[i - 1][0]), b = Math.log10(LUX_STOPS[i][0]);
+    if (v <= b) { const t = (v - a) / (b - a), A = LUX_STOPS[i - 1][1], B = LUX_STOPS[i][1]; return [0, 1, 2].map((q) => Math.round(A[q] + (B[q] - A[q]) * t)); }
+  }
+  return LUX_STOPS[LUX_STOPS.length - 1][1];
+}
+let luxPending = false;
+function scheduleLux() {
+  if (!LM.on || luxPending) return;
+  luxPending = true;
+  requestAnimationFrame(() => { luxPending = false; if (!LM.on) return; computeLux(); updateLightScene(); drawPlan(); renderLightUi(); });
+}
+
+// ---------- 3D: Sonne, Grundhelligkeit, echte Lampenlichter ----------
+const lampG = new THREE.Group(); scene.add(lampG);
+const MAX_LAMPS = 12;
+let floorLux = null, ceilMesh = null, doorCaster = null;
+function setRoomCasters(on) {
+  for (const wl of walls) wl.castShadow = on;
+  if (ceilMesh) ceilMesh.castShadow = on;
+  if (doorCaster) doorCaster.visible = on;
+}
+function sunColor(alt) { const t = Math.min(1, Math.max(0, alt / (25 * DEG))); return new THREE.Color().setRGB(1, 0.78 + 0.2 * t, 0.58 + 0.38 * t); }
+function syncLights() {
+  lampG.clear();
+  if (!LM.on) return;
+  const ls = state.items.filter(isLight).map(lightOf).filter((L) => L.on).sort((a, b) => b.lm - a.lm).slice(0, MAX_LAMPS);
+  const ex = LUX.expo;
+  for (const L of ls) {
+    let li;
+    if (L.mode === 'omni') li = new THREE.PointLight(kColor(L.k), (L.lm / (4 * Math.PI)) * ex, 0, 2);
+    else {
+      const spot = L.mode === 'spot';
+      li = new THREE.SpotLight(kColor(L.k), spot ? L.I0 * ex : (L.lm / Math.PI) * ex, 0, spot ? Math.min(1.4, (L.beam / 2) * 1.6 * DEG) : 1.45, spot ? 0.55 : 1, 2);
+      li.target.position.set(L.x, 0, L.z); lampG.add(li.target);
+    }
+    li.position.set(L.x, L.y, L.z); li.castShadow = false; lampG.add(li);
+  }
+}
+function updateGlow() {
+  for (const it of state.items) {
+    const g = meshes.get(it.id); if (!g || !g.userData.glow) continue;
+    const on = !it.off, I = !on ? 0 : !LM.on ? 0.7 : LUX.night ? 2.6 : 1.1;
+    for (const m of g.userData.glow) m.emissiveIntensity = I;
+  }
+}
+function updateLightScene() {
+  if (!LM.on) {   // normale Planer-Beleuchtung
+    sun.position.set(3, 7, 4); sun.intensity = 1.5; sun.color.set(0xffffff);
+    Object.assign(sun.shadow.camera, { left: -9, right: 9, top: 9, bottom: -9 }); sun.shadow.camera.updateProjectionMatrix();
+    hemi.intensity = 0.35; scene.environmentIntensity = 0.65;
+    setRoomCasters(false); lampG.clear(); if (floorLux) floorLux.visible = false; updateGlow(); applyBg();
+    return;
+  }
+  const { w, l } = state.room, ex = LUX.expo, sp = LUX.sun, R = Math.hypot(w, l) / 2 + 1.2;
+  if (sp && sp.alt > 0) {
+    sun.intensity = Math.min(6, LUX.out.dn * TAU * ex); sun.color.copy(sunColor(sp.alt));
+    sun.position.copy(LUX.dir).multiplyScalar(18);
+  } else sun.intensity = 0;
+  Object.assign(sun.shadow.camera, { left: -R, right: R, top: R, bottom: -R, near: 1, far: 45 }); sun.shadow.camera.updateProjectionMatrix();
+  sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.03;
+  const amb = Math.max(0.03, LUX.avgAmb * ex);   // diffuses Tageslicht + Reflexionen, gleichmäßig verteilt
+  hemi.intensity = 0.55 * amb; scene.environmentIntensity = 0.5 * amb;
+  setRoomCasters(true); syncLights(); updateGlow();
+  if (floorLux) floorLux.visible = LM.lux;
+  applyBg();
+}
+function buildFloorLux() {   // Helligkeitskarte auf dem 3D-Boden
+  if (floorLux) { floorLux.geometry.dispose(); roomG.remove(floorLux); }
+  const { w, l } = state.room, tex = new THREE.CanvasTexture(luxCanvas);
+  tex.colorSpace = THREE.SRGBColorSpace; tex.magFilter = THREE.LinearFilter;
+  floorLux = new THREE.Mesh(new THREE.PlaneGeometry(w, l), new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.82, depthWrite: false, toneMapped: false }));
+  floorLux.rotation.x = -Math.PI / 2; floorLux.position.y = 0.02; floorLux.renderOrder = 1; floorLux.visible = LM.on && LM.lux;
+  roomG.add(floorLux);
+}
+
+// ---------- 3D-Körper der Leuchten und des Fernsehers ----------
+function glowMat(it) { return new THREE.MeshStandardMaterial({ color: 0xfffaf0, emissive: new THREE.Color(kColor(lightOf(it).k)), emissiveIntensity: it.off ? 0 : 0.7, roughness: 0.5 }); }
+function buildLight(it) {
+  const c = BYTYPE[it.type], L = c.L, g = new THREE.Group(), y = lightY(it), H = state.room.h, glow = glowMat(it), glows = [glow];
+  const body = new THREE.MeshStandardMaterial({ color: it.color || '#f1efeb', roughness: 0.55, metalness: 0.15 });
+  const add = (geo, mat, px, py, pz, rx = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(px, py, pz); m.rotation.x = rx; m.castShadow = false; g.add(m); return m; };
+  const r = Math.max(0.04, it.w / 2), mode = it.mode || L.mode;
+  if (L.mount === 'ceiling' && mode !== 'spot') {
+    add(new THREE.CylinderGeometry(r, r * 0.94, 0.06, 40), body, 0, y + 0.04, 0);
+    add(new THREE.CircleGeometry(r * 0.86, 40), glow, 0, y + 0.009, 0, Math.PI / 2);
+  } else if (L.mount === 'ceiling') {
+    add(new THREE.CylinderGeometry(r, r, 0.012, 28), body, 0, H - 0.006, 0);
+    add(new THREE.CircleGeometry(r * 0.62, 28), glow, 0, H - 0.0135, 0, Math.PI / 2);
+  } else if (L.mount === 'pendant') {
+    add(new THREE.CylinderGeometry(0.004, 0.004, Math.max(0.05, H - y - 0.25), 6), metal, 0, (H + y + 0.25) / 2, 0);
+    add(new THREE.CylinderGeometry(0.05, 0.05, 0.03, 20), body, 0, H - 0.015, 0);
+    const shade = add(new THREE.CylinderGeometry(r * 0.25, r, 0.25, 36, 1, true), new THREE.MeshStandardMaterial({ color: it.color || '#2b2b2d', roughness: 0.5, metalness: 0.2, side: THREE.DoubleSide }), 0, y + 0.125, 0);
+    shade.castShadow = false;
+    add(new THREE.CircleGeometry(r * 0.9, 36), glow, 0, y + 0.02, 0, Math.PI / 2);
+  } else if (L.mount === 'wall') {
+    add(new THREE.BoxGeometry(it.w * 0.5, 0.12, 0.02), body, 0, y, -it.d / 2 + 0.01);
+    const shell = add(new THREE.CylinderGeometry(it.w / 2, it.w / 2, 0.12, 24, 1, false, -Math.PI / 2, Math.PI), glow, 0, y, -it.d / 2 + 0.02);
+    shell.scale.z = (it.d - 0.02) / (it.w / 2);
+  } else if (L.mount === 'table') {   // Höhe kommt über die Gruppe (steht ggf. auf einem Möbel)
+    const e = 0, hh = it.h;
+    add(new THREE.CylinderGeometry(r * 0.45, r * 0.5, 0.025, 24), body, 0, e + 0.0125, 0);
+    add(new THREE.CylinderGeometry(0.008, 0.008, hh * 0.6, 8), metal, 0, e + hh * 0.3, 0);
+    add(new THREE.CylinderGeometry(r * 0.6, r, hh * 0.42, 32, 1, true), glow, 0, e + hh * 0.79, 0).material.side = THREE.DoubleSide;
+  } else {   // markierte Lichtquelle: leuchtende Kugel + Lot zum Boden
+    add(new THREE.SphereGeometry(0.06, 20, 14), glow, 0, y, 0);
+    const pts = [new THREE.Vector3(0, 0.01, 0), new THREE.Vector3(0, y - 0.07, 0)];
+    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineDashedMaterial({ color: 0xa8792a, dashSize: 0.06, gapSize: 0.05 }));
+    line.computeLineDistances(); g.add(line);
+    const ring = add(new THREE.RingGeometry(0.08, 0.1, 32), new THREE.MeshBasicMaterial({ color: 0xa8792a, side: THREE.DoubleSide }), 0, 0.012, 0, -Math.PI / 2);
+    ring.castShadow = false;
+  }
+  g.userData.glow = glows;
+  return g;
+}
+function buildLampLit(it) {   // vorhandene Stehlampe: Schirm leuchtet in der Lichtfarbe
+  const g = buildLamp(it), glows = [];
+  g.traverse((o) => { if (o.isMesh && o.material && o.material.emissive && o.material.emissiveIntensity > 0) { o.material = o.material.clone(); o.material.emissive = new THREE.Color(kColor(lightOf(it).k)); glows.push(o.material); } });
+  g.userData.glow = glows; return g;
+}
+function buildTv(it) {
+  const g = new THREE.Group(), { sw, sh } = tvDims(it), wall = it.opts.mount === 'wall', foot = wall ? 0 : 0.07, z0 = wall ? -it.d / 2 + 0.02 : 0;
+  const frame = new THREE.MeshStandardMaterial({ color: 0x1a1b1e, roughness: 0.45 }), screen = new THREE.MeshStandardMaterial({ color: 0x07080a, roughness: 0.18, metalness: 0.2 });
+  const b = new THREE.Mesh(new THREE.BoxGeometry(sw, sh, 0.035), frame); b.position.set(0, foot + sh / 2, z0); b.castShadow = true; g.add(b);
+  const s = new THREE.Mesh(new THREE.PlaneGeometry(sw - 0.016, sh - 0.016), screen); s.position.set(0, foot + sh / 2, z0 + 0.0181); g.add(s);
+  if (!wall) for (const k of [-1, 1]) { const f = new THREE.Mesh(new THREE.BoxGeometry(0.05, foot, it.d), frame); f.position.set(k * sw * 0.36, foot / 2, 0); f.castShadow = true; g.add(f); }
+  return g;
+}
+function setTvSize(it) { const { sw, sh } = tvDims(it), wall = it.opts.mount === 'wall'; it.w = +sw.toFixed(3); it.h = +(sh + (wall ? 0 : 0.07)).toFixed(3); it.d = wall ? 0.06 : 0.22; }
+
+// ---------- Grundriss: Helligkeit, Sonnenflecken, Lampen, Nordpfeil ----------
+let hatch = null;
+function hatchPattern() {
+  if (hatch) return hatch;
+  const c = document.createElement('canvas'); c.width = c.height = 10; const x = c.getContext('2d');
+  x.fillStyle = 'rgba(255,214,90,0.55)'; x.fillRect(0, 0, 10, 10); x.strokeStyle = 'rgba(205,120,20,0.85)'; x.lineWidth = 1.6;
+  x.beginPath(); x.moveTo(-2, 12); x.lineTo(12, -2); x.moveTo(-2, 2); x.lineTo(2, -2); x.moveTo(8, 12); x.lineTo(12, 8); x.stroke();
+  return (hatch = pctx.createPattern(c, 'repeat'));
+}
+function drawLightLayer() {   // nach dem Raster, unter Wänden und Möbeln
+  if (!LM.on || !LUX.vals) return;
+  const { w, l } = state.room, [x0, y0] = P([-w / 2, -l / 2]), [x1, y1] = P([w / 2, l / 2]);
+  if (LM.lux) { pctx.save(); pctx.globalAlpha = 0.86; pctx.imageSmoothingEnabled = true; pctx.drawImage(luxCanvas, x0, y0, x1 - x0, y1 - y0); pctx.restore(); }
+  for (const p of LUX.sunPolys) {   // Sonnenflecken (exakt projiziert)
+    pctx.beginPath(); p.forEach((q, i) => { const [px, py] = P(q); i ? pctx.lineTo(px, py) : pctx.moveTo(px, py); }); pctx.closePath();
+    pctx.fillStyle = hatchPattern(); pctx.fill(); pctx.strokeStyle = 'rgba(200,110,10,0.95)'; pctx.lineWidth = 1.4; pctx.stroke();
+  }
+}
+function drawLightSym(it, sel) {
+  const L = lightOf(it), [px, py] = P([it.x, it.z]), on = L.on, m = mountOf(it), R = m === 'ceiling' && L.mode === 'spot' ? 5 : 8;
+  if (LM.on && on) {   // Ring: hier bringt die Lampe allein ≥ 100 lx
+    const rr = lampRadius(L, LM.plane) * view.s;
+    if (rr > R + 2) { pctx.beginPath(); pctx.arc(px, py, rr, 0, Math.PI * 2); pctx.fillStyle = 'rgba(255,205,90,0.08)'; pctx.fill(); pctx.setLineDash([4, 4]); pctx.strokeStyle = 'rgba(214,150,30,0.75)'; pctx.lineWidth = 1; pctx.stroke(); pctx.setLineDash([]); }
+  }
+  pctx.beginPath(); pctx.arc(px, py, R, 0, Math.PI * 2);
+  pctx.fillStyle = on ? '#f6c544' : '#b9bcc2'; pctx.fill();
+  pctx.strokeStyle = sel ? css('--brass') : '#1d2230'; pctx.lineWidth = sel ? 2.4 : 1.2; pctx.stroke();
+  pctx.beginPath();
+  if (m === 'marker') { pctx.arc(px, py, 2.5, 0, Math.PI * 2); pctx.fillStyle = '#1d2230'; pctx.fill(); }
+  else if (R > 6) { const k = R * 0.62; pctx.moveTo(px - k, py - k); pctx.lineTo(px + k, py + k); pctx.moveTo(px + k, py - k); pctx.lineTo(px - k, py + k); pctx.strokeStyle = '#1d2230'; pctx.lineWidth = 1.2; pctx.stroke(); }
+  pctx.textAlign = 'left';   // Beschriftung knapp halten: Name nur bei Auswahl
+  if (sel) {
+    pctx.font = '600 11px "IBM Plex Sans", Arial, sans-serif'; const txt = `${BYTYPE[it.type].name} · ${L.lm} lm${on ? '' : ' (aus)'}`, tw = pctx.measureText(txt).width;
+    const tx = px + R + 4 + tw > plan.getBoundingClientRect().width - 6 ? px - R - 4 - tw : px + R + 4;   // am rechten Rand nach links
+    pctx.fillStyle = css('--panel'); pctx.globalAlpha = 0.85; pctx.fillRect(tx - 3, py - 8, tw + 6, 16); pctx.globalAlpha = 1; pctx.fillStyle = css('--plan-wall'); pctx.fillText(txt, tx, py + 4);
+  }
+  else if (view.s > 34) { pctx.font = '500 10px "IBM Plex Mono", Menlo, monospace'; pctx.fillStyle = css('--mute'); pctx.fillText(on ? String(L.lm) : 'aus', px + R + 3, py + 3.5); }
+}
+const COMPASS = { r: 22 };
+function compassPos() { const r = plan.getBoundingClientRect(); return [r.width - 38, 38]; }
+function drawCompassAndSun() {
+  if (!LM.on) return;
+  const [cx, cy] = compassPos(), { N } = compassDirs();
+  pctx.save();
+  pctx.beginPath(); pctx.arc(cx, cy, COMPASS.r, 0, Math.PI * 2); pctx.fillStyle = css('--panel'); pctx.globalAlpha = 0.92; pctx.fill(); pctx.globalAlpha = 1;
+  pctx.strokeStyle = css('--line'); pctx.lineWidth = 1; pctx.stroke();
+  const ang = Math.atan2(N[0], -N[1]);
+  pctx.translate(cx, cy); pctx.rotate(ang);
+  pctx.beginPath(); pctx.moveTo(0, -17); pctx.lineTo(6, 4); pctx.lineTo(0, 0); pctx.lineTo(-6, 4); pctx.closePath(); pctx.fillStyle = '#c4321f'; pctx.fill();
+  pctx.beginPath(); pctx.moveTo(0, 17); pctx.lineTo(6, -4); pctx.lineTo(0, 0); pctx.lineTo(-6, -4); pctx.closePath(); pctx.fillStyle = css('--mute'); pctx.fill();
+  pctx.font = '600 10px "IBM Plex Sans", Arial, sans-serif'; pctx.textAlign = 'center'; pctx.fillStyle = css('--plan-wall'); pctx.fillText('N', 0, -20 - 2);
+  pctx.restore();
+  const sp = LUX.sun;   // Sonne am Raumrand in ihrer Himmelsrichtung
+  if (sp && sp.alt > 0) {
+    const { w, l } = state.room, d = LUX.dir, hl = Math.hypot(d.x, d.z) || 1, ux = d.x / hl, uz = d.z / hl;
+    const k = Math.min((w / 2 + 0.55) / Math.max(Math.abs(ux), 1e-6), (l / 2 + 0.55) / Math.max(Math.abs(uz), 1e-6));
+    const [sx, sy] = P([ux * k, uz * k]);
+    pctx.save(); pctx.setLineDash([3, 4]); pctx.strokeStyle = 'rgba(214,150,30,0.8)'; pctx.beginPath(); const [mx, my] = P([0, 0]); pctx.moveTo(sx, sy); pctx.lineTo(mx + (sx - mx) * 0.7, my + (sy - my) * 0.7); pctx.stroke(); pctx.setLineDash([]);
+    pctx.fillStyle = '#f6b72c'; pctx.beginPath(); pctx.arc(sx, sy, 7, 0, Math.PI * 2); pctx.fill();
+    pctx.strokeStyle = '#f6b72c'; pctx.lineWidth = 1.6; for (let a = 0; a < 8; a++) { const c = Math.cos(a * Math.PI / 4), s = Math.sin(a * Math.PI / 4); pctx.beginPath(); pctx.moveTo(sx + c * 9.5, sy + s * 9.5); pctx.lineTo(sx + c * 13, sy + s * 13); pctx.stroke(); }
+    pctx.restore();
+  }
+}
+
+// ---------- Licht-Tab ----------
+function renderLightUi() {
+  const pl = $('pLight'); if (!pl) return;
+  $('lightOn').textContent = LM.on ? 'Lichtsimulation aus' : 'Lichtsimulation an'; $('lightOn').classList.toggle('on', LM.on);
+  $('luxBtn').textContent = LM.lux ? 'Helligkeit ausblenden' : 'Helligkeit (Lux) zeigen'; $('luxBtn').classList.toggle('on', LM.lux);
+  $('lDate').value = LM.date; $('lTime').value = LM.min; $('lTimeTxt').textContent = fmtMin(LM.min) + ' Uhr';
+  $('lPlace').value = LM.place; $('lLat').value = LM.lat; $('lLon').value = LM.lon; $('lNorth').value = Math.round(state.room.north || 0);
+  $('lLatLon').hidden = LM.place !== 'manuell' && LM.place !== 'geo'; $('lPlane').value = String(LM.plane); $('lSky').value = LM.sky;
+  const st = sunTimes(), sp = sunPos(simDate(), LM.lat, LM.lon), alt = sp.alt / DEG;
+  $('lSun').textContent = (alt > 0 ? `Sonne ${alt.toFixed(0)}° hoch, aus ${azName(sp.az)} (${Math.round(sp.az / DEG)}°)` : alt > -6 ? 'Dämmerung' : 'Nacht – nur Lampen')
+    + ` · Aufgang ${st.rise != null ? fmtMin(st.rise) : '–'} · Untergang ${st.set != null ? fmtMin(st.set) : '–'} · mittags max. ${st.maxAlt.toFixed(0)}°`;
+  const on = LM.on && LUX.vals;
+  $('lAvg').textContent = on ? fmtLux(LUX.avg) : '–'; $('lMin').textContent = on ? fmtLux(LUX.min) : '–';
+  $('lSunA').textContent = on ? (LUX.sunArea > 0.01 ? `${LUX.sunArea.toFixed(1).replace('.', ',')} m² · ~${fmtLux(LUX.sunE)}` : 'keine') : '–';
+  $('lLegend').hidden = !LM.lux;
+  const ls = state.items.filter(isLight), box = $('lList'); box.innerHTML = '';
+  if (!ls.length) box.innerHTML = '<div class="empty">Noch keine Lichtquelle im Raum. Unten eine hinzufügen.</div>';
+  for (const it of ls) {
+    const L = lightOf(it), row = document.createElement('div'); row.className = 'lrow';
+    row.innerHTML = `<button class="lname"><b></b><small></small></button><button class="btn sm"></button>`;
+    row.querySelector('b').textContent = BYTYPE[it.type].short || BYTYPE[it.type].name;
+    row.querySelector('small').textContent = `${L.lm} lm · ${L.k} K · ${(L.y * 100).toFixed(0)} cm hoch`;
+    const tb = row.querySelector('.btn'); tb.textContent = L.on ? 'an' : 'aus'; tb.classList.toggle('on', L.on);
+    tb.onclick = () => { it.off = L.on ? true : undefined; rebuild(it); changed(); renderLightUi(); };
+    row.querySelector('.lname').onclick = () => select(it.id);
+    box.appendChild(row);
+  }
+  const night = LM.on && LUX.night && !ls.some((it) => !it.off);
+  $('lNightNote').hidden = !night;
+}
+function setLightMode(on) {
+  LM.on = on; saveLM();
+  if (on) { computeLux(); updateLightScene(); } else updateLightScene();
+  drawPlan(); renderLightUi(); updateTag();
+}
+function updateTag() {
+  const tg = document.querySelector('#view3d > .tag'); if (!tg) return;
+  tg.textContent = LM.on ? `3D · ${new Date(LM.date + 'T12:00').toLocaleDateString('de-DE', { day: 'numeric', month: 'short' })} · ${fmtMin(LM.min)} Uhr` : '3D';
+}
+function lightChanged() { saveLM(); renderLightUi(); updateTag(); scheduleLux(); }
+function renderWinList() {
+  const box = $('winList'); if (!box) return; box.innerHTML = '';
+  if (!state.room.wins.length) box.innerHTML = '<div class="empty">Kein Fenster.</div>';
+  state.room.wins.forEach((wi, i) => {
+    const d = document.createElement('div'); d.className = 'winrow';
+    d.innerHTML = `<div class="grid3"><label class="f">Wand<select data-k="wall"><option value="N">hinten</option><option value="S">vorn</option><option value="W">links</option><option value="E">rechts</option></select></label>`
+      + `<label class="f">Breite m<input data-k="width" type="number" step="0.05" min="0.3" max="8"></label><label class="f">Höhe m<input data-k="height" type="number" step="0.05" min="0.3" max="4"></label></div>`
+      + `<div class="grid3" style="margin-top:6px"><label class="f">Brüstung m<input data-k="sill" type="number" step="0.05" min="0" max="3"></label><label class="f" style="grid-column:span 2">Lage an der Wand<input data-k="pos" type="range" min="0" max="1" step="0.01"></label></div>`
+      + `<button class="btn sm" data-del>Fenster ${i + 1} entfernen</button>`;
+    for (const el of d.querySelectorAll('[data-k]')) {
+      const k = el.dataset.k; el.value = k === 'wall' ? wi.wall : k === 'pos' ? wi.pos : (+wi[k]).toFixed(2);
+      el.addEventListener(k === 'pos' ? 'input' : 'change', () => { wi[k] = k === 'wall' ? el.value : +el.value; if (k !== 'wall' && k !== 'pos') wi[k] = Math.max(k === 'sill' ? 0 : 0.3, wi[k] || 0); roomChanged(); });
+    }
+    d.querySelector('[data-del]').onclick = () => { state.room.wins.splice(i, 1); renderWinList(); roomChanged(); };
+    box.appendChild(d);
+  });
+}
+$('addWin').onclick = () => { state.room.wins.push({ wall: 'S', pos: 0.5, width: 1.2, height: 1.3, sill: 0.9 }); renderWinList(); roomChanged(); };
+$('tLight').onclick = () => { setTab('tLight'); if (!LM.seen) { LM.seen = true; setLightMode(true); } else renderLightUi(); };
+$('lightOn').onclick = () => setLightMode(!LM.on);
+$('luxBtn').onclick = () => { LM.lux = !LM.lux; if (LM.lux && !LM.on) LM.on = true; saveLM(); setLightMode(LM.on); };
+$('lDate').onchange = () => { if (/^\d{4}-\d\d-\d\d$/.test($('lDate').value)) { LM.date = $('lDate').value; lightChanged(); } };
+$('lTime').oninput = () => { LM.min = +$('lTime').value; lightChanged(); };
+for (const b of document.querySelectorAll('[data-q]')) b.onclick = () => {
+  const q = b.dataset.q, y = new Date().getFullYear();
+  if (q === 'jun') LM.date = `${y}-06-21`; else if (q === 'dec') LM.date = `${y}-12-21`; else if (q === 'mar') LM.date = `${y}-03-20`;
+  else if (q === 'now') { const d = new Date(); LM.date = todayStr(); LM.min = d.getHours() * 60 + d.getMinutes(); }
+  else if (q === 'day') LM.min = 13 * 60; else if (q === 'night') LM.min = 23 * 60;
+  if (!LM.on) { LM.on = true; saveLM(); setLightMode(true); }
+  lightChanged();
+};
+$('lPlace').onchange = () => {
+  const v = $('lPlace').value; LM.place = v;
+  if (PLACES[v]) { LM.lat = PLACES[v].lat; LM.lon = PLACES[v].lon; lightChanged(); }
+  else if (v === 'geo') {
+    $('lGeoNote').textContent = 'Standort wird abgefragt …';
+    if (!navigator.geolocation) { $('lGeoNote').textContent = 'Standort nicht verfügbar – bitte Breite/Länge eintragen.'; lightChanged(); return; }
+    navigator.geolocation.getCurrentPosition((p) => { LM.lat = +p.coords.latitude.toFixed(4); LM.lon = +p.coords.longitude.toFixed(4); $('lGeoNote').textContent = 'Standort übernommen.'; lightChanged(); },
+      () => { $('lGeoNote').textContent = 'Standort nicht freigegeben – bitte Breite/Länge eintragen.'; LM.place = 'manuell'; lightChanged(); }, { timeout: 10000, maximumAge: 600000 });
+  } else lightChanged();
+};
+$('lLat').onchange = () => { const v = +$('lLat').value; if (Math.abs(v) <= 90) { LM.lat = v; LM.place = 'manuell'; lightChanged(); } };
+$('lLon').onchange = () => { const v = +$('lLon').value; if (Math.abs(v) <= 180) { LM.lon = v; LM.place = 'manuell'; lightChanged(); } };
+$('lNorth').onchange = () => { state.room.north = ((+$('lNorth').value % 360) + 360) % 360; changed(); lightChanged(); };
+$('lPlane').onchange = () => { LM.plane = +$('lPlane').value; lightChanged(); };
+$('lSky').onchange = () => { LM.sky = $('lSky').value; lightChanged(); };
+{   // Legende
+  const g = $('lGrad'), stops = LUX_STOPS.map(([E, c], i) => `rgb(${c.join(',')}) ${((Math.log10(E) - Math.log10(5)) / (Math.log10(3000) - Math.log10(5)) * 100).toFixed(1)}%`);
+  g.style.background = `linear-gradient(90deg, ${stops.join(', ')})`;
+  for (const E of [50, 100, 300, 500, 1000]) { const s = document.createElement('span'); s.textContent = E; s.style.left = ((Math.log10(E) - Math.log10(5)) / (Math.log10(3000) - Math.log10(5)) * 100) + '%'; $('lTicks').appendChild(s); }
+}
+// Lichtquellen direkt im Licht-Tab hinzufügen
+{
+  const box = $('lCat');
+  for (const c of LIGHT_GROUP.items) {
+    const b = document.createElement('button');
+    b.innerHTML = `${catIcon(c.icon || c.kind)}<span><b>${c.name}</b>${c.note ? `<small>${c.note}</small>` : ''}</span><span class="dim">${c.L ? c.L.lm + ' lm' : ''}</span>`;
+    b.onclick = () => { const it = newItem(c.type, 0, 0); state.items.push(it); clamp(it, false); rebuild(it); select(it.id); changed(); };
+    box.appendChild(b);
+  }
+}
+// Auswahl-Panel: Licht-Eigenschaften
+function fillLightPanel(it) {
+  const box = $('selLight'), light = isLight(it); box.hidden = !light; if (!light) return;
+  const L = lightOf(it), m = mountOf(it);
+  $('sLm').value = L.lm; $('sK').value = String(L.k); $('sLz').value = Math.round(L.y * 100);
+  $('sModeRow').hidden = m !== 'marker' && L.mode !== 'spot'; $('sMode').value = L.mode; $('lBeam').hidden = L.mode !== 'spot'; $('sBeam').value = L.beam;
+  $('sOn').textContent = L.on ? 'Ausschalten' : 'Einschalten'; $('sOn').classList.toggle('on', !L.on);
+  $('lLzTxt').textContent = m === 'ceiling' ? 'Höhe cm (Decke)' : m === 'table' ? 'Höhe cm (auf Möbel)' : 'Höhe cm';
+  $('sLux').textContent = LM.on ? `direkt darunter: ${fmtLux(lampE(L, L.x, LM.plane, L.z))} auf ${LM.plane ? '0,8 m' : 'Boden'}` : 'Lichtsimulation im Tab „Licht“ einschalten für Lux-Werte.';
+}
+const lightEdit = (fn) => () => { const it = itemSel(); if (!it || !isLight(it)) return; fn(it); rebuild(it); fillLightPanel(it); changed(); renderLightUi(); };
+$('sLm').onchange = lightEdit((it) => { it.lm = Math.max(0, Math.min(30000, Math.round(+$('sLm').value || 0))); });
+$('sK').onchange = lightEdit((it) => { it.k = +$('sK').value; });
+$('sLz').onchange = lightEdit((it) => { const v = +$('sLz').value / 100; it.lz = Math.max(0.05, Math.min(state.room.h, v || 0)); });
+$('sMode').onchange = lightEdit((it) => { it.mode = $('sMode').value; });
+$('sBeam').onchange = lightEdit((it) => { it.beam = Math.max(10, Math.min(120, +$('sBeam').value || 36)); });
+$('sOn').onclick = lightEdit((it) => { it.off = it.off ? undefined : true; });
+// Grundriss: Lux unter dem Zeiger, Nordpfeil drehen
+let northDrag = false;
+function showLuxAt(clientX, clientY) {
+  const tip = $('luxTip'); if (!LM.on || !LUX.vals) { tip.hidden = true; return; }
+  const r = plan.getBoundingClientRect(), [x, z] = W2(clientX - r.left, clientY - r.top), { w, l } = state.room;
+  if (Math.abs(x) > w / 2 || Math.abs(z) > l / 2) { tip.hidden = true; $('lPtr').textContent = '–'; return; }
+  const E = luxAt(x, z, LUX.D, LUX.lamps), sunHit = LUX.sunPolys.some((p) => inside([x, z], p));
+  const txt = sunHit ? `Sonne · ~${fmtLux(LUX.sunE + E)}` : fmtLux(E);
+  tip.textContent = txt; tip.hidden = false; tip.style.left = (clientX - r.left + 14) + 'px'; tip.style.top = (clientY - r.top - 10) + 'px';
+  $('lPtr').textContent = txt;
+}
+const pw = $('planWrap');   // Abfangen auf dem Elternelement (Capture), bevor der Grundriss Möbel auswählt
+pw.addEventListener('pointerdown', (e) => {
+  if (!LM.on || e.target !== plan) return;
+  const r = plan.getBoundingClientRect(), [cx, cy] = compassPos(), dx = e.clientX - r.left - cx, dy = e.clientY - r.top - cy;
+  if (Math.hypot(dx, dy) <= COMPASS.r + 6) { northDrag = true; e.stopPropagation(); plan.setPointerCapture(e.pointerId); return; }
+  showLuxAt(e.clientX, e.clientY);
+}, true);
+pw.addEventListener('pointermove', (e) => {
+  if (northDrag) {
+    const r = plan.getBoundingClientRect(), [cx, cy] = compassPos(), a = Math.atan2(e.clientX - r.left - cx, -(e.clientY - r.top - cy)) / DEG;
+    state.room.north = (Math.round(a / 5) * 5 + 360) % 360; $('lNorth').value = state.room.north; scheduleLux(); drawPlan(); e.stopPropagation(); return;
+  }
+  if (LM.on && e.pointerType === 'mouse' && e.target === plan) showLuxAt(e.clientX, e.clientY);
+}, true);
+const endNorth = (e) => { if (northDrag) { northDrag = false; changed(); lightChanged(); e.stopPropagation(); } };
+pw.addEventListener('pointerup', endNorth, true); pw.addEventListener('pointercancel', endNorth, true);
+plan.addEventListener('pointerleave', () => { $('luxTip').hidden = true; });
 
 // ---------- Ansichten ----------
 function setView(v) {
@@ -1089,7 +1699,7 @@ applyBg(); buildCatalog(); roomInputs(); buildRoom3D(); rebuildAll();
 const fromHash = () => ({ '#grundriss': 'plan', '#3d': '3d', '#beides': 'both' }[location.hash]);
 setView(fromHash() || (matchMedia('(max-width: 760px)').matches ? '3d' : 'both'));
 addEventListener('hashchange', () => { const v = fromHash(); if (v) setView(v); });
-select(null, false); setTab('tAdd'); updatePhase();
+select(null, false); setTab('tAdd'); updatePhase(); renderLightUi(); updateTag(); if (LM.on) setLightMode(true);
 const camDir = new THREE.Vector3();
 const clock = new THREE.Clock();
 (function loop() {

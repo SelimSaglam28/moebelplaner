@@ -12,6 +12,8 @@ Leeren Raum einrichten – in 3D und als Grundriss, mit echten Maßen. Läuft di
 - Möbel ziehen, drehen, Maße eintippen, Farbe wählen, Tische ausziehen
 - Hinweise: Abstand zu jeder Wand, Überschneidungen, Türbereich, Durchgänge unter 60 cm
 - Rumlaufen wie im Videospiel (Maus/WASD, am Handy Stick) und dich auf Sofas, Stühle und Betten setzen
+- Licht: Sonnenstand nach Datum, Uhrzeit, Ort und Himmelsrichtung (Sonne nur durch die Fenster, mit Schatten), Lampen mit Lumen und Lichtfarbe, Lichtquellen markieren, Helligkeitskarte in Lux (Schätzung, ca. ±30 %)
+- Fernseher auf TV-Board, Sideboard oder Kommode stellen; mehrere Fenster je Raum
 - Eigene Fotomöbel (3D aus Fotos) mit Showroom – nur mit Passwort
 - Die Einrichtung bleibt im eigenen Browser gespeichert; es werden keine Daten verschickt
 

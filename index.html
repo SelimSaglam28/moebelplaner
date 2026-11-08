@@ -81,6 +81,23 @@
   .note { font-size: 12px; color: var(--mute); }
   .empty { color: var(--mute); font-size: 13px; padding: 10px; border: 1px dashed var(--line); border-radius: 9px; }
   .hint { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); font-size: 12px; color: var(--mute); background: color-mix(in srgb, var(--panel) 88%, transparent); padding: 4px 10px; border-radius: 999px; white-space: nowrap; pointer-events: none; }
+  /* Licht-Tab, Fenster-Liste, Lux-Anzeige */
+  .tabs button { padding: 7px 4px; }
+  .btn.sm { padding: 4px 9px; font-size: 12px; }
+  .winrow { border: 1px solid var(--line); border-radius: 9px; padding: 8px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 6px; }
+  .winrow .btn.sm { align-self: flex-start; }
+  .luxtip { position: absolute; pointer-events: none; font: 600 12px var(--mono); color: #fff; background: rgba(20,22,28,.8); padding: 3px 7px; border-radius: 6px; white-space: nowrap; z-index: 2; }
+  .legend { margin-top: 10px; }
+  #lGrad { height: 12px; border-radius: 6px; }
+  #lTicks { position: relative; height: 16px; font: 10px var(--mono); color: var(--mute); margin: 0 4px; }
+  #lTicks span { position: absolute; transform: translateX(-50%); top: 2px; }
+  .legend .cats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px 10px; font-size: 11.5px; color: var(--mute); margin-top: 2px; }
+  .legend .cats span:last-child { grid-column: 1 / -1; }
+  .legend .sun { display: inline-block; width: 12px; height: 12px; vertical-align: -2px; border-radius: 3px; background: repeating-linear-gradient(45deg, #ffd65a 0 3px, #cd7814 3px 4.5px); margin-right: 5px; }
+  .lrow { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); }
+  .lrow .lname { text-align: left; background: none; border: 0; color: var(--ink); font: 13px var(--sans); cursor: pointer; padding: 0; }
+  .lrow .lname small { display: block; color: var(--mute); font-size: 11.5px; }
+  .warnnote { font-size: 12px; color: var(--warn); margin: 6px 0 0; }
   /* Rumlaufen (Ich-Perspektive) */
   .walk-btn { position: absolute; right: 10px; top: 10px; z-index: 3; padding: 7px 13px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font: 600 13px var(--sans); cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.14); }
   .walk-btn:hover { border-color: var(--brass); }
@@ -137,13 +154,14 @@
   </header>
   <div class="views" id="views">
     <div id="view3d"><span class="tag">3D</span><span class="hint">Möbel ziehen = verschieben · R = drehen · Ziehen im Raum = umsehen</span><button id="walkBtn" class="walk-btn" type="button" title="Durch den Raum laufen wie in einem Spiel – und dich auf Sofas, Stühle und Betten setzen">Rumlaufen</button><div id="walkUi" hidden><div id="crosshair"></div><div id="walkHint" class="walk-hint"></div><div id="walkPause" hidden><div class="card"><b>Pause</b><span>Klicken zum Weiterlaufen</span><span class="keys">WASD gehen · Maus umsehen · Shift rennen · E hinsetzen</span></div></div><div id="joy" hidden><div id="joyKnob"></div></div><button id="sitBtn" type="button" hidden>Hinsetzen</button></div><div id="phase" data-tour-phase="loading" hidden></div></div>
-    <div id="planWrap"><canvas id="plan"></canvas><span class="tag">Grundriss · Maße in m</span></div>
+    <div id="planWrap"><canvas id="plan"></canvas><span class="tag">Grundriss · Maße in m</span><div id="luxTip" class="luxtip" hidden></div></div>
   </div>
   <aside>
     <div class="tabs" role="tablist">
       <button role="tab" id="tRoom" aria-selected="false">Raum</button>
       <button role="tab" id="tAdd" aria-selected="true">Möbel +</button>
       <button role="tab" id="tSel" aria-selected="false">Ausgewählt</button>
+      <button role="tab" id="tLight" aria-selected="false">Licht</button>
     </div>
     <section id="pRoom" hidden>
       <h2>Raummaße (innen)</h2>
@@ -159,11 +177,8 @@
       </div>
       <label class="f" style="margin-top:8px">Lage an der Wand<input id="dPos" type="range" min="0" max="1" step="0.01"></label>
       <h2 style="margin-top:14px">Fenster</h2>
-      <div class="grid2">
-        <label class="f">Wand<select id="wWall"><option value="N">hinten</option><option value="S">vorn</option><option value="W">links</option><option value="E">rechts</option><option value="-">keins</option></select></label>
-        <label class="f">Breite m<input id="wWidth" type="number" step="0.05" min="0.4" max="5"></label>
-      </div>
-      <label class="f" style="margin-top:8px">Lage an der Wand<input id="wPos" type="range" min="0" max="1" step="0.01"></label>
+      <div id="winList"></div>
+      <button class="btn" id="addWin">+ Fenster hinzufügen</button>
       <div class="row" style="margin-top:14px"><button class="btn" id="resetEx">Beispiel laden</button><button class="btn" id="clearAll">Alle Möbel entfernen</button></div>
       <p class="note" id="clearNote" hidden></p>
       <p class="note">Die Einrichtung bleibt in diesem Browser gespeichert.</p>
@@ -185,6 +200,16 @@
           <button class="btn" id="opt1" hidden></button>
           <button class="btn" id="opt2" hidden></button>
         </div>
+        <div id="selLight" hidden>
+          <h2 style="margin-top:12px">Licht</h2>
+          <div class="grid3">
+            <label class="f">Lumen<input id="sLm" type="number" step="50" min="0" max="30000"></label>
+            <label class="f">Lichtfarbe<select id="sK"><option value="2700">2700 K warm</option><option value="3000">3000 K</option><option value="4000">4000 K neutral</option></select></label>
+            <label class="f"><span id="lLzTxt">Höhe cm</span><input id="sLz" type="number" step="5" min="5" max="450"></label>
+          </div>
+          <div class="grid2" id="sModeRow" style="margin-top:8px"><label class="f">Abstrahlung<select id="sMode"><option value="down">nach unten</option><option value="omni">rundum</option><option value="spot">Spot</option></select></label><label class="f" id="lBeam">Winkel °<input id="sBeam" type="number" step="2" min="10" max="120"></label></div>
+          <div class="row" style="margin-top:8px;align-items:center"><button class="btn" id="sOn">Ausschalten</button><span class="note" id="sLux"></span></div>
+        </div>
         <h2 style="margin-top:12px" id="hFarbe">Farbe</h2>
         <div class="swatches" id="swatches"></div>
         <h2 style="margin-top:12px">Abstände</h2>
@@ -196,6 +221,28 @@
         <p class="msg" id="sMsg"></p>
         <div class="row"><button class="btn" id="dup">Duplizieren</button><button class="btn" id="del">Entfernen</button></div>
       </div>
+    </section>
+    <section id="pLight" hidden>
+      <div class="row"><button class="btn primary" id="lightOn">Lichtsimulation an</button><button class="btn" id="luxBtn">Helligkeit (Lux) zeigen</button></div>
+      <p class="note" id="lSun" style="margin:8px 0 0"></p>
+      <p class="warnnote" id="lNightNote" hidden>Nachts brennt hier keine Lampe – unten eine Lichtquelle hinzufügen oder einschalten.</p>
+      <h2 style="margin-top:12px">Datum &amp; Uhrzeit</h2>
+      <div class="grid2"><label class="f">Datum<input id="lDate" type="date"></label><label class="f">Uhrzeit · <b id="lTimeTxt"></b><input id="lTime" type="range" min="0" max="1435" step="5"></label></div>
+      <div class="row" style="margin-top:8px"><button class="btn sm" data-q="jun">21. Juni</button><button class="btn sm" data-q="mar">20. März</button><button class="btn sm" data-q="dec">21. Dez.</button><button class="btn sm" data-q="now">Jetzt</button><button class="btn sm" data-q="day">Tag (13 Uhr)</button><button class="btn sm" data-q="night">Nacht (23 Uhr)</button></div>
+      <h2 style="margin-top:12px">Ort &amp; Himmelsrichtung</h2>
+      <div class="grid2"><label class="f">Ort<select id="lPlace"><option value="augsburg">Augsburg</option><option value="muenchen">München</option><option value="geo">Mein Standort</option><option value="manuell">Manuell</option></select></label><label class="f">Norden (° ab Grundriss oben)<input id="lNorth" type="number" step="5"></label></div>
+      <div class="grid2" id="lLatLon" style="margin-top:8px"><label class="f">Breite °N<input id="lLat" type="number" step="0.0001"></label><label class="f">Länge °O<input id="lLon" type="number" step="0.0001"></label></div>
+      <p class="note" id="lGeoNote">Den Nordpfeil oben rechts im Grundriss kannst du drehen. Uhrzeit in der Zeitzone deines Geräts.</p>
+      <h2 style="margin-top:12px">Helligkeit</h2>
+      <div class="grid2"><label class="f">Messhöhe<select id="lPlane"><option value="0.8">Tischhöhe 0,8 m</option><option value="0">Boden</option></select></label><label class="f">Himmel<select id="lSky"><option value="klar">klar (Sonne)</option><option value="bedeckt">bedeckt</option></select></label></div>
+      <div class="dist" style="margin-top:8px"><div>Ø Raum <b id="lAvg">–</b></div><div>Minimum <b id="lMin">–</b></div><div class="wide">am Zeiger/Finger <b id="lPtr">–</b></div><div class="wide">Direkte Sonne <b id="lSunA">–</b></div></div>
+      <div class="legend" id="lLegend" hidden><div id="lGrad"></div><div id="lTicks"></div>
+        <div class="cats"><span>unter 50 lx: dunkel</span><span>100–300: Wohnen</span><span>300–500: Lesen, Arbeiten</span><span>500+: Küche, Schreibtisch</span><span><i class="sun"></i>direkte Sonne (Zehntausende lx, eigene Farbe)</span></div></div>
+      <p class="note">Schätzung, ca. ±30 %. Lampen als Punktlichtquellen aus Lumen und Abstand, Reflexionen grob gemittelt (Wände 70 %, Decke 80 %, Boden 30 %), Tageslicht aus einem Himmelsmodell durch die Fenster (Glas 65 %). Keine Nachbarhäuser, Bäume, Gardinen oder Möbelschatten in den Lux-Werten, kein Raytracing.</p>
+      <h2 style="margin-top:12px">Lichtquellen im Raum</h2>
+      <div id="lList"></div>
+      <h2 style="margin-top:12px">Lichtquelle hinzufügen</h2>
+      <div class="cat" id="lCat"></div>
     </section>
   </aside>
 </div>
@@ -278,7 +325,7 @@ async function fromPassword(pw) {
   return crypto.subtle.deriveKey({ name: 'PBKDF2', salt: unb64(m.salt), iterations: m.iterations, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, true, ['decrypt']);
 }
 let started = false;
-async function start() { if (started) return; started = true; $('lock').hidden = true; await import('./app.js?v=3e754fc308'); }
+async function start() { if (started) return; started = true; $('lock').hidden = true; await import('./app.js?v=19f8760990'); }
 (async () => {
   try {
     const saved = localStorage.getItem(STORE);
