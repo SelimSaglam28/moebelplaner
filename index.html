@@ -217,11 +217,60 @@ async function gunzip(buf) {
   if (typeof DecompressionStream === 'undefined') throw new Error('Browser zu alt zum Entpacken');
   return new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
 }
+// Ladeanzeige und Fehler der Fotomöbel – sichtbar, damit man am Handy sieht, was passiert
+const st = document.createElement('div');
+st.style.cssText = 'position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:60;max-width:calc(100% - 32px);box-sizing:border-box;padding:8px 14px;border-radius:14px;background:rgba(20,22,28,.88);color:#fff;font:500 13px -apple-system,BlinkMacSystemFont,sans-serif;text-align:center;display:none';
+document.body.appendChild(st);
+st.addEventListener('click', () => { st.style.display = 'none'; });
+let total = 0, done = 0, hideT = 0;
+const errs = [];
+function showStatus() {
+  clearTimeout(hideT);
+  st.style.display = 'block';
+  if (errs.length) { st.textContent = `Fotomöbel: ${errs.length} nicht geladen – ${errs[errs.length - 1]} (antippen schließt)`; return; }
+  if (done < total) { st.textContent = `Fotomöbel werden geladen … ${done} / ${total}`; return; }
+  st.textContent = `Fotomöbel geladen (${done})`;
+  hideT = setTimeout(() => { st.style.display = 'none'; }, 1500);
+}
+const warn = console.warn.bind(console);
+console.warn = (...a) => {   // Fehler beim Aufbau im Planer (app.js) ebenfalls anzeigen
+  try { if (String(a[0]).startsWith('3D-Modell nicht geladen')) { const e = a[2]; errs.push(e ? `${e.name || 'Fehler'}: ${e.message || e}` : 'unbekannt'); showStatus(); } } catch (_) { /* egal */ }
+  warn(...a);
+};
+// höchstens zwei Modelle gleichzeitig: am iPhone weniger Speicher auf einmal
+let running = 0;
+const waiting = [];
+const slot = () => new Promise((res) => { if (running < 2) { running++; res(); } else waiting.push(res); });
+const release = () => { const next = waiting.shift(); if (next) next(); else running--; };
+async function loadModel(key, file) {
+  total++;
+  showStatus();
+  await slot();
+  let stage = 'Laden';
+  try {
+    const res = await fetch(file);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const enc = await res.arrayBuffer();
+    stage = 'Entschlüsseln';
+    const plain = await decrypt(key, enc);
+    stage = 'Entpacken';
+    const glb = await gunzip(plain);
+    done++;
+    showStatus();
+    return glb;
+  } catch (e) {
+    const err = new Error(`${stage}: ${(e && e.message) || e}`);
+    err.name = (e && e.name) || 'Error';
+    throw err;
+  } finally {
+    release();
+  }
+}
 async function open(key) {   // falsches Passwort → OperationError beim Entschlüsseln
   const m = await getMeta();
   const r = await fetch('fotomoebel/' + m.index); if (!r.ok) throw new Error('Liste ' + r.status);
   const idx = JSON.parse(new TextDecoder().decode(await decrypt(key, await r.arrayBuffer())));
-  window.__FOTO = { items: idx.items, load: async (file) => { const res = await fetch(file); if (!res.ok) throw new Error('HTTP ' + res.status); return gunzip(await decrypt(key, await res.arrayBuffer())); } };
+  window.__FOTO = { items: idx.items, load: (file) => loadModel(key, file) };
 }
 async function fromPassword(pw) {
   const m = await getMeta();
