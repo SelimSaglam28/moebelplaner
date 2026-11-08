@@ -69,7 +69,8 @@ const isWood = (c) => c in WOODS;
 
 // ---------- Katalog ----------
 const PHOTO_ITEMS = (window.__FOTO && window.__FOTO.items) || [];   // verschlüsselt im Repo, entschlüsselt in index.html
-const PHOTO_GROUP = { group: 'Deine Fotomöbel (3D aus deinen Fotos)', intro: 'In echter Größe, Farben aus dem Foto. Geschätzte Maße kannst du unter „Ausgewählt“ ändern. Im Showroom stehen alle 9 in einem großen Raum – mit „Rumlaufen“ gehst du durch und setzt dich hin.', action: { id: 'showBtn', run: () => showroomClick() }, items: PHOTO_ITEMS };
+
+const PHOTO_GROUP = { group: 'Deine Fotomöbel (3D aus deinen Fotos)', intro: 'In echter Größe, Farben aus dem Foto. Geschätzte Maße kannst du unter „Ausgewählt“ ändern. Im Showroom stehen alle in einem großen Raum – mit „Rumlaufen“ gehst du durch und setzt dich hin.', action: { id: 'showBtn', run: () => showroomClick() }, items: PHOTO_ITEMS };
 const CAT = [
   ...(PHOTO_ITEMS.length ? [PHOTO_GROUP] : []),
   { group: 'Deine Auswahl (Maße laut Segmüller)', items: [
@@ -154,6 +155,7 @@ function showroom() {   // großer Raum mit allen Foto-Möbeln, Rücken an der W
       newItem('f_53f6e7', -0.25, 3.78, P),
       newItem('f_92cb10', -1.6, 3.81, P),
       newItem('pflanze', 4.55, -3.55),
+      newItem('f_460b66', 0.0, 0.95, 0),
     ],
   };
   const W = s.room.w / 2 - 0.004, L = s.room.l / 2 - 0.004;
