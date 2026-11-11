@@ -1413,9 +1413,9 @@ function showroomClick() {
 }
 
 // ---------- Rumlaufen: Ich-Perspektive wie im Spiel, mit Hinsetzen ----------
-const EYE = 1.65, RADIUS = 0.25, SPEED = 1.4, RUN = 2.8;
+const EYE = 1.65, RADIUS = 0.25, SPEED = 1.4, RUN = 2.8, CROUCH_EYE = 1.05, CROUCH_SPEED = 0.55;
 const qs = new URLSearchParams(location.search);
-const walk = { on: false, pos: new THREE.Vector3(), yaw: 0, pitch: 0, vx: 0, vz: 0, keys: new Set(), seat: null, anim: null, bob: 0, touch: false, joy: null, look: null, drag: null, target: null, pickT: 0, planT: 0, lockFailed: false, hintKey: '' };
+const walk = { on: false, pos: new THREE.Vector3(), yaw: 0, pitch: 0, vx: 0, vz: 0, keys: new Set(), seat: null, anim: null, bob: 0, touch: false, joy: null, look: null, drag: null, target: null, pickT: 0, planT: 0, lockFailed: false, hintKey: '', crouch: false, eyeH: EYE };
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const isTouch = () => qs.has('touch') || matchMedia('(pointer: coarse)').matches;
 const wrapPi = (a) => Math.atan2(Math.sin(a), Math.cos(a));
@@ -1543,9 +1543,13 @@ function toggleAllLamps() {
 function animTo(x, y, z, yaw, pitch, dur) {
   walk.anim = { t: 0, dur, from: { x: walk.pos.x, y: walk.pos.y, z: walk.pos.z, yaw: walk.yaw, pitch: walk.pitch }, to: { x, y, z, yaw: walk.yaw + wrapPi(yaw - walk.yaw), pitch } };
 }
+function toggleCrouch() {
+  if (!walk.on || walk.seat || walk.anim) return;
+  walk.crouch = !walk.crouch; walk.hintKey = ''; updateWalkHint();
+}
 function sitDown(t) {
   const p = seatPose(t);
-  walk.seat = { it: t.it, kind: t.kind }; walk.target = null; walk.vx = walk.vz = 0;
+  walk.seat = { it: t.it, kind: t.kind }; walk.target = null; walk.vx = walk.vz = 0; walk.crouch = false; walk.eyeH = EYE;
   animTo(p.x, p.y, p.z, p.yaw, p.pitch, t.kind === 'bed' ? 1.1 : 0.85);
   updateWalkHint();
 }
@@ -1577,10 +1581,10 @@ function updateWalkHint() {
   else if (t && t.light) text = (walk.touch ? '' : 'E – ') + (t.it.off ? 'Licht an: ' : 'Licht aus: ') + shortName(t.it);
   else if (t) text = (walk.touch ? '' : 'E – ') + (t.kind === 'bed' ? 'Hinlegen: ' : 'Hinsetzen: ') + shortName(t.it);
   else if (walk.touch) text = 'Links ziehen: gehen · rechts wischen: umsehen';
-  else if (walk.lockFailed) text = 'Ziehen: umsehen · WASD: gehen · Shift: rennen · E: hinsetzen / Licht · L: alle Lichter';
-  else text = locked ? 'WASD gehen · Maus umsehen · Shift rennen · E hinsetzen / Licht · L alle Lichter · Esc Pause' : '';
+  else if (walk.lockFailed) text = 'Ziehen: umsehen · WASD: gehen · Shift: rennen · C: ducken · E: hinsetzen / Licht · L: alle Lichter';
+  else text = locked ? (walk.crouch ? 'Geduckt · C aufstehen · WASD gehen · E hinsetzen / Licht · Esc Pause' : 'WASD gehen · Maus umsehen · Shift rennen · C ducken · E hinsetzen / Licht · L alle Lichter · Esc Pause') : '';
   const lamps = state.items.filter(isLight), lampsOn = lamps.filter((it) => !it.off).length;
-  const key = text + '|' + !!t + '|' + !!walk.seat + '|' + walk.touch + '|' + lamps.length + '|' + lampsOn;
+  const key = text + '|' + !!t + '|' + !!walk.seat + '|' + walk.touch + '|' + lamps.length + '|' + lampsOn + '|' + walk.crouch;
   if (key === walk.hintKey) return;
   walk.hintKey = key;
   $('walkHint').textContent = text;
@@ -1588,6 +1592,7 @@ function updateWalkHint() {
   const b = $('sitBtn'); b.hidden = !walk.touch || (!t && !walk.seat);
   b.textContent = walk.seat ? 'Aufstehen' : t && t.light ? (t.it.off ? 'Licht an' : 'Licht aus') : t && t.kind === 'bed' ? 'Hinlegen' : 'Hinsetzen';
   const ab = $('allBtn'); ab.hidden = !walk.touch || !lamps.length; ab.textContent = lampsOn ? 'Alle Lichter aus' : 'Alle Lichter an';
+  const cb = $('crouchBtn'); cb.hidden = !walk.touch || !!walk.seat; cb.textContent = walk.crouch ? 'Aufstehen' : 'Ducken'; cb.classList.toggle('on', walk.crouch);
 }
 function drawPlayer() {   // Minikarte im Grundriss
   if (!walk.on) return;
@@ -1606,11 +1611,12 @@ function updateWalk(dt) {
   if (walk.seat && !walk.anim && mag > 0.35) standUp();
   let speed = 0;
   if (!walk.seat && !walk.anim) {
-    const run = k.has('ShiftLeft') || k.has('ShiftRight'), L = Math.hypot(f, s) || 1, sp = (run ? RUN : SPEED) * mag;
+    const run = k.has('ShiftLeft') || k.has('ShiftRight'), L = Math.hypot(f, s) || 1, sp = (walk.crouch ? SPEED * CROUCH_SPEED : run ? RUN : SPEED) * mag;
     const sy = Math.sin(walk.yaw), cy = Math.cos(walk.yaw), fx = f / L, sx = s / L, a = 1 - Math.exp(-10 * dt);
     walk.vx += ((-sy * fx + cy * sx) * sp - walk.vx) * a; walk.vz += ((-cy * fx - sy * sx) * sp - walk.vz) * a;
     if (!mag && Math.hypot(walk.vx, walk.vz) < 0.01) walk.vx = walk.vz = 0;
-    walk.pos.x += walk.vx * dt; walk.pos.z += walk.vz * dt; walk.pos.y = EYE;
+    walk.eyeH += ((walk.crouch ? CROUCH_EYE : EYE) - walk.eyeH) * (1 - Math.exp(-dt / 0.065));   // ~0,2 s
+    walk.pos.x += walk.vx * dt; walk.pos.z += walk.vz * dt; walk.pos.y = walk.eyeH;
     collide(walk.pos);
     speed = Math.hypot(walk.vx, walk.vz);
   }
@@ -1640,7 +1646,7 @@ function enterWalk() {
   if (walk.on) return;
   select(null, false);
   const s = startPose();
-  Object.assign(walk, { on: true, yaw: s.yaw, pitch: -0.08, vx: 0, vz: 0, seat: null, anim: null, target: null, joy: null, look: null, drag: null, hintKey: '', touch: isTouch() });
+  Object.assign(walk, { on: true, yaw: s.yaw, pitch: -0.08, vx: 0, vz: 0, seat: null, anim: null, target: null, joy: null, look: null, drag: null, hintKey: '', touch: isTouch(), crouch: false, eyeH: EYE });
   walk.pos.set(s.x, EYE, s.z);
   document.body.classList.add('walking'); document.body.classList.toggle('touchwalk', walk.touch);
   $('walkUi').hidden = false; $('joy').hidden = !walk.touch; $('walkPause').hidden = true; $('walkBtn').textContent = 'Beenden';
@@ -1654,13 +1660,14 @@ function exitWalk() {
   walk.on = false; walk.keys.clear(); walk.joy = walk.look = walk.drag = null; walk.seat = walk.anim = walk.target = null;
   if (document.pointerLockElement) document.exitPointerLock();
   document.body.classList.remove('walking', 'touchwalk');
-  $('walkUi').hidden = true; $('sitBtn').hidden = true; $('allBtn').hidden = true; $('walkBtn').textContent = 'Rumlaufen';
+  walk.crouch = false; walk.eyeH = EYE; $('walkUi').hidden = true; $('sitBtn').hidden = true; $('allBtn').hidden = true; $('crouchBtn').hidden = true; $('walkBtn').textContent = 'Rumlaufen';
   controls.enabled = true; applyBg();
   requestAnimationFrame(() => { resize(); fitCamera(); drawPlan(); });
 }
 $('walkBtn').onclick = () => (walk.on ? exitWalk() : enterWalk());
 $('sitBtn').onclick = () => toggleSit();
 $('allBtn').onclick = () => toggleAllLamps();
+$('crouchBtn').onclick = () => toggleCrouch();
 $('walkPause').addEventListener('click', () => lockPointer());
 document.addEventListener('pointerlockchange', () => {
   const locked = document.pointerLockElement === renderer.domElement;
@@ -1673,6 +1680,7 @@ addEventListener('keydown', (e) => {
   if (!walk.on || e.metaKey || e.ctrlKey || e.altKey) return;
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
   if (e.code === 'KeyL') { e.preventDefault(); if (!e.repeat) toggleAllLamps(); return; }
+  if (e.code === 'KeyC') { e.preventDefault(); if (!e.repeat) toggleCrouch(); return; }
   if (e.code === 'KeyE' || e.code === 'Space') { e.preventDefault(); if (!e.repeat) toggleSit(); return; }
   if (e.code === 'Escape' && (walk.lockFailed || walk.touch)) { exitWalk(); return; }
   if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ShiftLeft', 'ShiftRight'].includes(e.code)) { walk.keys.add(e.code); e.preventDefault(); }
@@ -1723,6 +1731,8 @@ if (qs.has('test')) window.__plan = {   // nur für automatische Tests (?test)
   },
   target: () => (walk.target ? (walk.target.light ? 'Licht: ' + shortName(walk.target.it) + (walk.target.it.off ? ' (aus)' : ' (an)') : shortName(walk.target.it) + ' / ' + walk.target.kind) : null),
   act: () => { toggleSit(); return 'ok'; },
+  crouch: () => { toggleCrouch(); return 'geduckt=' + walk.crouch; },
+  eyeY: () => +walk.pos.y.toFixed(3),
   lampsOn: () => state.items.filter(isLight).filter((it) => !it.off).length + ' / ' + state.items.filter(isLight).length,
   where: () => [walk.pos.x.toFixed(2), walk.pos.y.toFixed(2), walk.pos.z.toFixed(2), ((walk.yaw * 180) / Math.PI).toFixed(0)].join(' '),
   keys(codes, ms) { codes.forEach((c) => walk.keys.add(c)); setTimeout(() => codes.forEach((c) => walk.keys.delete(c)), ms); return 'ok'; },
