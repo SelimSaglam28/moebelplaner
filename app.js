@@ -5,6 +5,584 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 
+// ---------- Bodenbeläge: Dekore und Muster-Generator (aus frontend/src/tour/paint/floors.ts) ----------
+var MC3Boden = (() => {
+  var __defProp = Object.defineProperty;
+  var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+  var __getOwnPropNames = Object.getOwnPropertyNames;
+  var __hasOwnProp = Object.prototype.hasOwnProperty;
+  var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
+  };
+  var __copyProps = (to, from, except, desc) => {
+    if (from && typeof from === "object" || typeof from === "function") {
+      for (let key of __getOwnPropNames(from))
+        if (!__hasOwnProp.call(to, key) && key !== except)
+          __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+    }
+    return to;
+  };
+  var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+  var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
+  var floors_exports = {};
+  __export(floors_exports, {
+    FLOOR_DECORS: () => FLOOR_DECORS,
+    FLOOR_GROUPS: () => FLOOR_GROUPS,
+    defaultMaxPx: () => defaultMaxPx,
+    floorDecor: () => floorDecor,
+    floorOrder: () => floorOrder,
+    floorSwatch: () => floorSwatch,
+    floorTexture: () => floorTexture,
+    floorTextureAsync: () => floorTextureAsync,
+    reflectance: () => reflectance
+  });
+  const D = (id, group, name, size, pattern, len, wid, look, base, accent, extra = {}) => ({
+    id,
+    group,
+    name,
+    size,
+    pattern,
+    len,
+    wid,
+    look,
+    base,
+    accent,
+    joint: 6e-4,
+    jointColor: "#4a3a2c",
+    bevel: 0,
+    vary: 0.07,
+    offset: 0,
+    rough: 0.62,
+    waste: pattern === "herringbone" ? 0.12 : pattern === "tiles" ? 0.08 : 0.07,
+    ...extra
+  });
+  const FLOOR_DECORS = [
+    // Klick-Vinyl: sehr feine Fuge, leichte Fase
+    D("vinyl-eiche-hell", "Vinyl", "Eiche hell", "122 \xD7 18 cm", "planks", 1.22, 0.18, "wood", "#d5bb95", "#a8845c", { bevel: 1e-3 }),
+    D("vinyl-landhaus", "Vinyl", "Landhausdiele Eiche", "150 \xD7 23 cm", "planks", 1.5, 0.23, "knotty", "#bf9b72", "#876544", { bevel: 12e-4, vary: 0.08 }),
+    D("vinyl-eiche-grau", "Vinyl", "Eiche grau", "122 \xD7 18 cm", "planks", 1.22, 0.18, "wood", "#a69d92", "#776e64", { bevel: 1e-3, jointColor: "#4b4741" }),
+    D("vinyl-fischgraet", "Vinyl", "Fischgr\xE4t Eiche", "63 \xD7 12,6 cm", "herringbone", 0.63, 0.126, "wood", "#c5a076", "#8d6a48", { bevel: 8e-4, vary: 0.09 }),
+    D("vinyl-stein", "Vinyl", "Steinoptik grau", "61 \xD7 30,5 cm", "tiles", 0.61, 0.305, "stone", "#9d9a95", "#77746e", {
+      joint: 15e-4,
+      jointColor: "#7c7974",
+      vary: 0.04,
+      offset: 0.5,
+      rough: 0.7
+    }),
+    // Laminat: deutliche 4V-Fuge
+    D("laminat-eiche-natur", "Laminat", "Eiche natur", "128,5 \xD7 19,2 cm", "planks", 1.285, 0.192, "wood", "#c3a07a", "#8e6c4a", { bevel: 16e-4, joint: 8e-4 }),
+    D("laminat-eiche-weiss", "Laminat", "Eiche wei\xDF", "128,5 \xD7 19,2 cm", "planks", 1.285, 0.192, "wood", "#e3d7c5", "#b8a68e", {
+      bevel: 16e-4,
+      joint: 8e-4,
+      jointColor: "#8a7c6b",
+      vary: 0.05
+    }),
+    D("laminat-rustikal", "Laminat", "Eiche rustikal", "138 \xD7 24,4 cm", "planks", 1.38, 0.244, "knotty", "#b38a5f", "#785536", { bevel: 18e-4, joint: 8e-4, vary: 0.09 }),
+    D("laminat-raeuchereiche", "Laminat", "R\xE4uchereiche", "128,5 \xD7 19,2 cm", "planks", 1.285, 0.192, "wood", "#82614a", "#4f3828", {
+      bevel: 16e-4,
+      joint: 8e-4,
+      jointColor: "#2c2019"
+    }),
+    D("laminat-nussbaum", "Laminat", "Nussbaum", "128,5 \xD7 19,2 cm", "planks", 1.285, 0.192, "wood", "#71503a", "#432e1f", {
+      bevel: 16e-4,
+      joint: 8e-4,
+      jointColor: "#271b13"
+    }),
+    // Fliesen: Fuge 2–3 mm
+    D("fliese-beton", "Fliesen", "Betonoptik grau", "60 \xD7 60 cm", "tiles", 0.6, 0.6, "concrete", "#aaa7a1", "#8b8882", {
+      joint: 3e-3,
+      jointColor: "#8e8b86",
+      vary: 0.03,
+      rough: 0.72
+    }),
+    D("fliese-anthrazit", "Fliesen", "Anthrazit", "60 \xD7 60 cm", "tiles", 0.6, 0.6, "concrete", "#505255", "#3c3e41", {
+      joint: 3e-3,
+      jointColor: "#3d3e40",
+      vary: 0.035,
+      rough: 0.68
+    }),
+    D("fliese-weiss", "Fliesen", "Wei\xDF matt", "60 \xD7 30 cm", "tiles", 0.6, 0.3, "plain", "#ecebe7", "#dcdad5", {
+      joint: 25e-4,
+      jointColor: "#cfccc6",
+      vary: 0.015,
+      offset: 0.5,
+      rough: 0.55
+    }),
+    D("fliese-marmor", "Fliesen", "Marmoroptik", "120 \xD7 60 cm", "tiles", 1.2, 0.6, "marble", "#f0eee9", "#8f8e8b", {
+      joint: 2e-3,
+      jointColor: "#dcd9d3",
+      vary: 0.02,
+      rough: 0.22,
+      waste: 0.1
+    }),
+    D("fliese-terrazzo", "Fliesen", "Terrazzo", "60 \xD7 60 cm", "tiles", 0.6, 0.6, "terrazzo", "#e6e1d8", "#9a928a", {
+      joint: 2e-3,
+      jointColor: "#d3cdc3",
+      vary: 0.02,
+      rough: 0.45
+    }),
+    D("fliese-holzoptik", "Fliesen", "Holzoptik", "120 \xD7 20 cm", "planks", 1.2, 0.2, "wood", "#ab8861", "#76563a", {
+      joint: 3e-3,
+      jointColor: "#8a7a69",
+      vary: 0.06,
+      rough: 0.7,
+      waste: 0.1
+    })
+  ];
+  const FLOOR_GROUPS = ["Vinyl", "Laminat", "Fliesen"];
+  function floorDecor(id) {
+    var _a;
+    return (_a = FLOOR_DECORS.find((d) => d.id === id)) != null ? _a : null;
+  }
+  function rgb(hex) {
+    const n = parseInt(hex.slice(1), 16);
+    return [n >> 16 & 255, n >> 8 & 255, n & 255];
+  }
+  const toLinear = (c) => {
+    const s = c / 255;
+    return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  };
+  function reflectance(hex) {
+    const [r, g, b] = rgb(hex);
+    return Math.min(0.9, 0.92 * (0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b)));
+  }
+  function hashStr(s) {
+    let h = 2166136261;
+    for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619);
+    return h >>> 0;
+  }
+  function rng(seed) {
+    let s = seed >>> 0 || 1;
+    return () => {
+      s = Math.imul(s, 1664525) + 1013904223 >>> 0;
+      return s / 4294967296;
+    };
+  }
+  function hash(a, b) {
+    let h = Math.imul(a | 0, 374761393) ^ Math.imul((b | 0) + 1, 668265263);
+    h = Math.imul(h ^ h >>> 13, 1274126177);
+    return ((h ^ h >>> 16) >>> 0) / 4294967296;
+  }
+  class Noise {
+    constructor(seed) {
+      __publicField(this, "p", new Uint8Array(512));
+      __publicField(this, "g", new Float32Array(256));
+      const r = rng(seed);
+      const perm = Array.from({ length: 256 }, (_, i) => i);
+      for (let i = 255; i > 0; i--) {
+        const j = Math.floor(r() * (i + 1));
+        [perm[i], perm[j]] = [perm[j], perm[i]];
+      }
+      for (let i = 0; i < 512; i++) this.p[i] = perm[i & 255];
+      for (let i = 0; i < 256; i++) this.g[i] = r();
+    }
+    at(x, y) {
+      const xi = Math.floor(x);
+      const yi = Math.floor(y);
+      const xf = x - xi;
+      const yf = y - yi;
+      const u = xf * xf * (3 - 2 * xf);
+      const v = yf * yf * (3 - 2 * yf);
+      const p = this.p;
+      const g = this.g;
+      const X = xi & 255;
+      const Y = yi & 255;
+      const a = g[p[p[X] + Y]];
+      const b = g[p[p[X + 1] + Y]];
+      const c = g[p[p[X] + Y + 1]];
+      const d = g[p[p[X + 1] + Y + 1]];
+      const top = a + (b - a) * u;
+      return top + (c + (d - c) * u - top) * v;
+    }
+    fbm(x, y, octaves) {
+      let sum = 0;
+      let amp = 0.5;
+      let norm = 0;
+      for (let o = 0; o < octaves; o++) {
+        sum += amp * this.at(x, y);
+        norm += amp;
+        x = x * 2.03 + 17.1;
+        y = y * 2.03 + 31.7;
+        amp *= 0.5;
+      }
+      return sum / norm;
+    }
+  }
+  const smooth = (e0, e1, x) => {
+    const t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0)));
+    return t * t * (3 - 2 * t);
+  };
+  function planksLayout(d) {
+    const L = d.len;
+    const W = d.wid;
+    const per = Math.max(2, Math.ceil(3.2 / L));
+    const tileX = per * L;
+    const rows = Math.max(6, Math.round(tileX * 0.62 / W));
+    const tileY = rows * W;
+    const r = rng(hashStr(d.id));
+    const offs = [];
+    const minGap = Math.min(0.3, L * 0.3);
+    let prev = 0;
+    for (let i = 0; i < rows; i++) {
+      let o = 0;
+      for (let t = 0; t < 30; t++) {
+        o = r() * L;
+        const diff = Math.abs(o - prev);
+        if (Math.min(diff, L - diff) >= minGap) break;
+      }
+      offs.push(o);
+      prev = o;
+    }
+    return {
+      tileX,
+      tileY,
+      at(x, y, h) {
+        const row = Math.min(rows - 1, Math.max(0, Math.floor(y / W)));
+        const s = x - offs[row];
+        const k = Math.floor(s / L);
+        const u = s - k * L;
+        const v = y - row * W;
+        const kk = (k % per + per) % per;
+        h.seed = row * 131 + kk * 7 + 1;
+        h.u = u;
+        h.v = v;
+        h.pl = L;
+        h.pw = W;
+        h.dir = 0;
+        h.d = Math.min(u, L - u, v, W - v);
+      }
+    };
+  }
+  function tilesLayout(d) {
+    const L = d.len;
+    const W = d.wid;
+    const nx = Math.max(2, Math.ceil(1.75 / L));
+    let ny = Math.max(2, Math.ceil(1.75 / W));
+    if (d.offset > 0 && ny % 2) ny += 1;
+    const tileX = nx * L;
+    const tileY = ny * W;
+    return {
+      tileX,
+      tileY,
+      at(x, y, h) {
+        const row = Math.min(ny - 1, Math.max(0, Math.floor(y / W)));
+        const s = x - (row % 2 ? d.offset * L : 0);
+        const k = Math.floor(s / L);
+        const u = s - k * L;
+        const v = y - row * W;
+        const kk = (k % nx + nx) % nx;
+        h.seed = row * 131 + kk * 7 + 3;
+        h.u = u;
+        h.v = v;
+        h.pl = L;
+        h.pw = W;
+        h.dir = 0;
+        h.d = Math.min(u, L - u, v, W - v);
+      }
+    };
+  }
+  function herringboneLayout(d) {
+    const W = d.wid;
+    const k = Math.max(2, Math.round(d.len / W));
+    const L = k * W;
+    const SQ2 = Math.SQRT2;
+    const mx = Math.max(1, Math.round(1.8 / (SQ2 * L)));
+    const tileX = mx * SQ2 * L;
+    const my = Math.max(1, Math.round(tileX / (SQ2 * W)));
+    const tileY = my * SQ2 * W;
+    const Q = 4e-3;
+    const qx = Math.round(tileX / Q);
+    const qy = Math.round(tileY / Q);
+    const idOf = (cx, cy) => {
+      const x = (cx - cy) / SQ2;
+      const y = (cx + cy) / SQ2;
+      const ix = (Math.round(x / Q) % qx + qx) % qx;
+      const iy = (Math.round(y / Q) % qy + qy) % qy;
+      return ix * 7919 + iy * 104729 + 11;
+    };
+    return {
+      tileX,
+      tileY,
+      at(x, y, h) {
+        const X = (x + y) / SQ2;
+        const Y = (y - x) / SQ2;
+        const j = Math.floor(Y / W);
+        const s = X - j * W;
+        const n = Math.floor(s / (2 * L));
+        const t = s - n * 2 * L;
+        if (t < L) {
+          h.u = t;
+          h.v = Y - j * W;
+          h.dir = 0;
+          h.seed = idOf(j * W + 2 * L * n + L / 2, j * W + W / 2);
+        } else {
+          const c = Math.floor(X / W);
+          const nn = Math.floor((c - j) / (2 * k));
+          const j0 = c - 2 * k * nn - 2 * k + 1;
+          h.u = Y - j0 * W;
+          h.v = X - c * W;
+          h.dir = 1;
+          h.seed = idOf(c * W + W / 2, j0 * W + L / 2);
+        }
+        h.pl = L;
+        h.pw = W;
+        h.d = Math.min(h.u, L - h.u, h.v, W - h.v);
+      }
+    };
+  }
+  function layoutOf(d) {
+    return d.pattern === "herringbone" ? herringboneLayout(d) : d.pattern === "tiles" ? tilesLayout(d) : planksLayout(d);
+  }
+  function lookShader(d, noise) {
+    switch (d.look) {
+      case "wood":
+      case "knotty": {
+        const knotty = d.look === "knotty";
+        return (h) => {
+          const r1 = hash(h.seed, 11);
+          const ou = r1 * 97;
+          const ov = hash(h.seed, 12) * 89;
+          const u = h.u + ou;
+          const v = h.v + ov;
+          const streak = noise.fbm(u * 0.9, v * 46, 3);
+          let a = smooth(0.42, 0.82, streak) * 0.62;
+          a += (noise.at(u * 7, v * 380) - 0.5) * 0.22;
+          if (hash(h.seed, 13) < 0.55) {
+            const vc = (0.25 + 0.5 * hash(h.seed, 14)) * h.pw;
+            const q = (h.v - vc) / h.pw;
+            const f = q * q * 9 - h.u / h.pl * (2 + 3 * hash(h.seed, 15)) + noise.fbm(u * 1.3, v * 9, 2) * 0.8;
+            const band = Math.abs((f * 3.2 % 1 + 1) % 1 - 0.5) * 2;
+            a += (1 - smooth(0, 0.22, band)) * 0.38 * smooth(0, 0.25, 1 - Math.abs(q) * 1.6);
+          }
+          if (knotty) {
+            const n = Math.floor(hash(h.seed, 16) * 3.2);
+            for (let i = 0; i < n; i++) {
+              const ku = hash(h.seed, 20 + i) * h.pl;
+              const kv = (0.18 + 0.64 * hash(h.seed, 30 + i)) * h.pw;
+              const rad = 6e-3 + 0.012 * hash(h.seed, 40 + i);
+              const du = (h.u - ku) / (rad * 1.7);
+              const dv = (h.v - kv) / rad;
+              const e = du * du + dv * dv;
+              if (e < 9) a = Math.max(a, Math.exp(-e * 1.4) * 1.1, Math.exp(-Math.abs(e - 2.2) * 2.5) * 0.45);
+            }
+          }
+          return a;
+        };
+      }
+      case "concrete":
+        return (h, x, y) => {
+          const o = hash(h.seed, 11) * 50;
+          const cloud = noise.fbm(h.u * 2.1 + o, h.v * 2.1 + o, 4);
+          let a = (cloud - 0.5) * 0.95 + 0.3;
+          a += (noise.at(h.u * 95 + o, h.v * 95) - 0.5) * 0.35;
+          const cell = hash(Math.floor(x * 400) + 1000003 * h.seed, Math.floor(y * 400));
+          if (cell < 6e-3) a += 0.9;
+          return a;
+        };
+      case "stone":
+        return (h) => {
+          const o = hash(h.seed, 11) * 50;
+          const warp = noise.fbm(h.u * 1.6 + o, h.v * 1.6, 3);
+          let a = (noise.fbm(h.u * 1.4 + warp * 1.8 + o, h.v * 5.5 + o, 4) - 0.5) * 2 + 0.45;
+          a += (noise.at(h.u * 120 + o, h.v * 120) - 0.5) * 0.3;
+          return a;
+        };
+      case "marble":
+        return (h) => {
+          const o = hash(h.seed, 11) * 50;
+          const ang = 0.35 + 0.5 * hash(h.seed, 12);
+          const turb = noise.fbm(h.u * 0.55 + o, h.v * 0.55 + o, 5);
+          const f = (h.u * Math.cos(ang) + h.v * Math.sin(ang)) * 0.9 + turb * 1.9 + o;
+          const vein = Math.abs(Math.sin(f * Math.PI));
+          const g = (h.u * Math.cos(ang + 1.2) + h.v * Math.sin(ang + 1.2)) * 1.6 + noise.fbm(h.u * 1.1 + 9, h.v * 1.1, 4) * 2.2 + o;
+          const side = Math.abs(Math.sin(g * Math.PI));
+          let a = Math.pow(1 - vein, 9) * 0.5 + Math.pow(1 - vein, 45) * 0.55;
+          a += Math.pow(1 - side, 30) * 0.28 * noise.at(h.u * 3 + o, h.v * 3);
+          a += (noise.fbm(h.u * 1.3 + o, h.v * 1.3, 4) - 0.5) * 0.22;
+          return a;
+        };
+      case "terrazzo":
+        return (h) => {
+          const C = 0.032;
+          const cx = Math.floor(h.u / C);
+          const cy = Math.floor(h.v / C);
+          let best = 0;
+          for (let i = -1; i <= 1; i++)
+            for (let j = -1; j <= 1; j++) {
+              const id = (cx + i) * 7349 + (cy + j) * 3517 + h.seed * 13;
+              const px = (cx + i + hash(id, 1)) * C;
+              const py = (cy + j + hash(id, 2)) * C;
+              const rad = 3e-3 + 0.011 * hash(id, 3) ** 1.6;
+              const dx = h.u - px;
+              const dy = h.v - py;
+              if (dx * dx + dy * dy > rad * rad * 1.21) continue;
+              const ang = Math.atan2(dy, dx);
+              const rr = rad * (0.75 + 0.35 * Math.sin(ang * 3 + hash(id, 4) * 6) * Math.cos(ang * 2 + hash(id, 5) * 4));
+              if (dx * dx + dy * dy < rr * rr) best = 2 + Math.floor(hash(id, 6) * 4);
+            }
+          return best || (noise.at(h.u * 160, h.v * 160) - 0.5) * 0.15;
+        };
+      default:
+        return (h) => (noise.at(h.u * 60, h.v * 60) - 0.5) * 0.25 + (noise.fbm(h.u * 2, h.v * 2, 2) - 0.5) * 0.2;
+    }
+  }
+  const TERRAZZO_CHIPS = ["#9a928a", "#c4b9ab", "#6b655f", "#b58d70"];
+  function paintRows(d, lay, shade, ppm, out, w, y0, y1) {
+    const base = rgb(d.base);
+    const acc = rgb(d.accent);
+    const jc = rgb(d.jointColor);
+    const chips = TERRAZZO_CHIPS.map(rgb);
+    const px = 1 / ppm;
+    const jw = Math.max(d.joint, 0.7 * px);
+    const jStrength = Math.min(1, d.joint / (0.7 * px));
+    const h = { seed: 0, u: 0, v: 0, pl: 1, pw: 1, d: 1, dir: 0 };
+    for (let py = y0; py < y1; py++) {
+      const y = (py + 0.5) * px;
+      let i = py * w * 4;
+      for (let pxl = 0; pxl < w; pxl++, i += 4) {
+        const x = (pxl + 0.5) * px;
+        lay.at(x, y, h);
+        const a = shade(h, x, y);
+        let r;
+        let g;
+        let b;
+        if (a >= 2) {
+          const c = chips[(a - 2) % chips.length];
+          r = c[0];
+          g = c[1];
+          b = c[2];
+        } else {
+          const t = Math.min(1, Math.max(-0.4, a));
+          r = base[0] + (acc[0] - base[0]) * t;
+          g = base[1] + (acc[1] - base[1]) * t;
+          b = base[2] + (acc[2] - base[2]) * t;
+        }
+        const tone = 1 + d.vary * (2 * hash(h.seed, 1) - 1) + (h.dir ? -0.025 : 0.02) * (d.pattern === "herringbone" ? 1 : 0);
+        const warm = d.vary * 0.35 * (2 * hash(h.seed, 2) - 1);
+        r *= tone * (1 + warm);
+        g *= tone;
+        b *= tone * (1 - warm);
+        if (d.bevel > 0 && h.d < d.bevel) {
+          const f = 1 - 0.2 * (1 - h.d / d.bevel);
+          r *= f;
+          g *= f;
+          b *= f;
+        }
+        const cov = jStrength * Math.min(1, Math.max(0, (jw / 2 - h.d) / px + 0.5));
+        if (cov > 0) {
+          r += (jc[0] - r) * cov;
+          g += (jc[1] - g) * cov;
+          b += (jc[2] - b) * cov;
+        }
+        out[i] = r;
+        out[i + 1] = g;
+        out[i + 2] = b;
+        out[i + 3] = 255;
+      }
+    }
+  }
+  const MAX_PPM = 520;
+  function prepare(d, maxPx) {
+    const lay = layoutOf(d);
+    const ppm = Math.min(MAX_PPM, maxPx / Math.max(lay.tileX, lay.tileY));
+    const w = Math.max(8, Math.round(lay.tileX * ppm));
+    const hgt = Math.max(8, Math.round(lay.tileY * ppm));
+    const ppmX = w / lay.tileX;
+    const ppmY = hgt / lay.tileY;
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = hgt;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Canvas 2D nicht verf\xFCgbar");
+    const img = ctx.createImageData(w, hgt);
+    const shade = lookShader(d, new Noise(hashStr(d.id) ^ 2654435769));
+    const sx = ppmX / ppmY;
+    const scaled = sx === 1 ? lay : { ...lay, at: (x, y, h) => lay.at(x / sx, y, h) };
+    return { lay, canvas, ctx, img, shade, ppmY, w, hgt, scaled, sx };
+  }
+  const cache = /* @__PURE__ */ new Map();
+  const pending = /* @__PURE__ */ new Map();
+  function defaultMaxPx() {
+    var _a;
+    const touch = typeof navigator !== "undefined" && ((_a = navigator.maxTouchPoints) != null ? _a : 0) > 0;
+    return touch ? 1280 : 2048;
+  }
+  function floorTexture(d, maxPx = defaultMaxPx()) {
+    const key = `${d.id}|${maxPx}`;
+    const hit = cache.get(key);
+    if (hit) return hit;
+    const p = prepare(d, maxPx);
+    paintRows(d, p.scaled, p.shade, p.ppmY, p.img.data, p.w, 0, p.hgt);
+    p.ctx.putImageData(p.img, 0, 0);
+    const tex = { canvas: p.canvas, tileX: p.lay.tileX, tileY: p.lay.tileY };
+    cache.set(key, tex);
+    return tex;
+  }
+  function floorTextureAsync(d, maxPx = defaultMaxPx()) {
+    const key = `${d.id}|${maxPx}`;
+    const hit = cache.get(key);
+    if (hit) return Promise.resolve(hit);
+    const run = pending.get(key);
+    if (run) return run;
+    const job = new Promise((resolve, reject) => {
+      let p;
+      try {
+        p = prepare(d, maxPx);
+      } catch (e) {
+        reject(e);
+        return;
+      }
+      const step = Math.max(8, Math.floor(16e4 / p.w));
+      let y = 0;
+      const next = () => {
+        try {
+          const y1 = Math.min(p.hgt, y + step);
+          paintRows(d, p.scaled, p.shade, p.ppmY, p.img.data, p.w, y, y1);
+          y = y1;
+          if (y < p.hgt) {
+            setTimeout(next, 0);
+            return;
+          }
+          p.ctx.putImageData(p.img, 0, 0);
+          const tex = { canvas: p.canvas, tileX: p.lay.tileX, tileY: p.lay.tileY };
+          cache.set(key, tex);
+          pending.delete(key);
+          resolve(tex);
+        } catch (e) {
+          pending.delete(key);
+          reject(e);
+        }
+      };
+      setTimeout(next, 0);
+    });
+    pending.set(key, job);
+    return job;
+  }
+  function floorSwatch(d, sizePx = 96, meters = 1.3) {
+    const lay = layoutOf(d);
+    const shade = lookShader(d, new Noise(hashStr(d.id) ^ 2654435769));
+    const ppm = sizePx / meters;
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = sizePx;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return "";
+    const img = ctx.createImageData(sizePx, sizePx);
+    const wrap = { ...lay, at: (x, y, h) => lay.at(x % lay.tileX, y % lay.tileY, h) };
+    paintRows(d, wrap, shade, ppm, img.data, sizePx, 0, sizePx);
+    ctx.putImageData(img, 0, 0);
+    return canvas.toDataURL("image/png");
+  }
+  function floorOrder(d, area) {
+    const m2 = Math.ceil(area * (1 + d.waste) * 10) / 10;
+    const pieces = Math.ceil(m2 / (d.len * d.wid));
+    const unit = d.pattern === "herringbone" ? "St\xE4be" : d.group === "Fliesen" && d.pattern === "tiles" ? "Fliesen" : "Dielen";
+    return { m2, pieces, unit };
+  }
+  return __toCommonJS(floors_exports);
+})();
+
 const $ = (id) => document.getElementById(id);
 const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 const fmtM = (m) => m.toFixed(2).replace('.', ',') + ' m';
@@ -309,8 +887,7 @@ function applyBg() {
 function buildRoom3D() {
   roomG.clear();
   const { w, l, h } = state.room, t = 0.12;
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(w, l), woodMat('eiche-hell', w, l));
-  floor.material.color.set(0xe9dcc6); floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; roomG.add(floor);
+  roomG.add(buildFloorMesh(w, l));
   const ceil = new THREE.Mesh(new THREE.PlaneGeometry(w, l), new THREE.MeshStandardMaterial({ color: 0xf7f5f0, roughness: 0.95, emissive: 0xfffaf0, emissiveIntensity: 0.55 }));
   ceil.rotation.x = Math.PI / 2; ceil.position.y = h; roomG.add(ceil); ceil.material.shadowSide = THREE.DoubleSide; ceilMesh = ceil;   // zeigt nach unten: von oben unsichtbar, beim Rumlaufen Decke
   const dg = doorGeom(), wgs = winGeoms();
@@ -324,8 +901,8 @@ function buildRoom3D() {
     for (const g2 of wgs) if (g2.wall === wall) { const c = g2.center * flip, hw = g2.width / 2, y0 = Math.max(0.002, g2.sill); const hole = new THREE.Path(); hole.moveTo(c - hw, y0); hole.lineTo(c + hw, y0); hole.lineTo(c + hw, g2.top); hole.lineTo(c - hw, g2.top); hole.lineTo(c - hw, y0); shape.holes.push(hole); }
     const geo = new THREE.ExtrudeGeometry(shape, { depth: t, bevelEnabled: false });
     geo.translate(0, 0, -t / 2);
-    const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: 0xfbfaf7, roughness: 0.95 }));
-    m.position.set(...pos); m.rotation.y = rotY; m.receiveShadow = true; m.castShadow = LM.on; m.userData.n = new THREE.Vector3(...n);
+    const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: paintOf(wall), roughness: 0.95 }));
+    m.position.set(...pos); m.rotation.y = rotY; m.receiveShadow = true; m.castShadow = LM.on; m.userData.n = new THREE.Vector3(...n); m.userData.wall = wall;
     roomG.add(m); walls.push(m);
   };
   mkWall('N', w + 2 * t, [0, 0, -l / 2 - t / 2], 0, [0, 0, 1]);
@@ -613,6 +1190,7 @@ function drawPlan() {
   const { w, l } = state.room, t = 0.12, ink = css('--plan-wall'), mute = css('--mute'), brass = css('--brass'), bad = css('--bad');
   const [x0, y0] = P([-w / 2, -l / 2]), [x1, y1] = P([w / 2, l / 2]);
   pctx.fillStyle = css('--plan-fill'); pctx.fillRect(x0, y0, x1 - x0, y1 - y0);
+  { const fd = MC3Boden.floorDecor(state.room.floor.id); if (fd) { pctx.globalAlpha = matchMedia('(prefers-color-scheme: dark)').matches ? 0.2 : 0.3; pctx.fillStyle = fd.base; pctx.fillRect(x0, y0, x1 - x0, y1 - y0); pctx.globalAlpha = 1; } }
   pctx.strokeStyle = css('--line'); pctx.lineWidth = 1; pctx.beginPath();   // Raster 50 cm
   for (let x = -w / 2 + 0.5; x < w / 2 - 0.01; x += 0.5) { const [px] = P([x, 0]); pctx.moveTo(px, y0); pctx.lineTo(px, y1); }
   for (let z = -l / 2 + 0.5; z < l / 2 - 0.01; z += 0.5) { const [, py] = P([0, z]); pctx.moveTo(x0, py); pctx.lineTo(x1, py); }
@@ -621,6 +1199,8 @@ function drawPlan() {
   const ts = t * view.s; pctx.fillStyle = ink;   // Wände
   pctx.fillRect(x0 - ts, y0 - ts, x1 - x0 + 2 * ts, ts); pctx.fillRect(x0 - ts, y1, x1 - x0 + 2 * ts, ts);
   pctx.fillRect(x0 - ts, y0, ts, y1 - y0); pctx.fillRect(x1, y0, ts, y1 - y0);
+  { const sw = Math.max(2.5, Math.min(5, ts * 0.45)), R = { N: [x0, y0 - sw, x1 - x0, sw], S: [x0, y1, x1 - x0, sw], W: [x0 - sw, y0, sw, y1 - y0], E: [x1, y0, sw, y1 - y0] };   // Wandfarbe innen
+    for (const k of WALL_KEYS) { const c = paintOf(k); if (c === WALL_WHITE) continue; pctx.fillStyle = c; pctx.fillRect(...R[k]); } }
   const dg = doorGeom(), wgs = winGeoms(), off = (wall) => ({ N: [0, -ts / 2], S: [0, ts / 2], W: [-ts / 2, 0], E: [ts / 2, 0] }[wall]);
   const opening = (a, b, wall, fill) => {
     const [ax, ay] = P(a), [bx, by] = P(b), [ox, oy] = off(wall);
@@ -632,6 +1212,10 @@ function drawPlan() {
   pctx.setLineDash([4, 3]); pctx.beginPath(); dg.sector.slice(1).forEach((p, i) => { const [px, py] = P(p); i ? pctx.lineTo(px, py) : pctx.moveTo(px, py); }); pctx.stroke(); pctx.setLineDash([]);
   for (const wg of wgs) { opening(wg.a, wg.b, wg.wall, css('--paper')); const [ox, oy] = off(wg.wall); const [ax, ay] = P(wg.a), [bx, by] = P(wg.b);
     pctx.strokeStyle = ink; pctx.lineWidth = 1; for (const k of [-0.25, 0.25]) { pctx.beginPath(); pctx.moveTo(ax + ox + (oy ? 0 : k * ts), ay + oy + (ox ? 0 : k * ts)); pctx.lineTo(bx + ox + (oy ? 0 : k * ts), by + oy + (ox ? 0 : k * ts)); pctx.stroke(); } }
+  if (!$('pDeco').hidden && paintTarget !== 'all') {   // im Tab „Farbe“: gewählte Wand
+    const E = { N: [[x0, y0], [x1, y0]], S: [[x0, y1], [x1, y1]], W: [[x0, y0], [x0, y1]], E: [[x1, y0], [x1, y1]] }[paintTarget];
+    pctx.save(); pctx.strokeStyle = brass; pctx.lineWidth = 3; pctx.beginPath(); pctx.moveTo(...E[0]); pctx.lineTo(...E[1]); pctx.stroke(); pctx.restore();
+  }
   dimLine([-w / 2, -l / 2], [w / 2, -l / 2], -(ts + 16), fmtM(w), mute);   // Raummaße
   dimLine([-w / 2, l / 2], [-w / 2, -l / 2], -(ts + 16), fmtM(l), mute);
   const lay = (i) => (isRug(i) ? 0 : isLight(i) ? 3 : i.on ? 2 : 1), order = [...state.items].sort((a, b) => lay(a) - lay(b));
@@ -661,7 +1245,8 @@ function drawPlan() {
 
 // ---------- Auswahl & Panel ----------
 function setTab(t) {
-  for (const [b, p] of [['tRoom', 'pRoom'], ['tAdd', 'pAdd'], ['tSel', 'pSel'], ['tLight', 'pLight']]) { $(b).setAttribute('aria-selected', b === t); $(p).hidden = b !== t; }
+  for (const [b, p] of [['tRoom', 'pRoom'], ['tAdd', 'pAdd'], ['tSel', 'pSel'], ['tLight', 'pLight'], ['tDeco', 'pDeco']]) { $(b).setAttribute('aria-selected', b === t); $(p).hidden = b !== t; }
+  if (t === 'tDeco') renderDeco(); if (typeof drawPlan === 'function' && plan) drawPlan();
 }
 function select(id, openTab = true) {
   selected = id;
@@ -706,7 +1291,7 @@ function drawRings() {
     ringG.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: bad ? 0xc4321f : 0xa8792a })));
   }
 }
-function changed() { save(); refreshInfo(); drawPlan(); drawRings(); if (LM.on) scheduleLux(); else if (!$('pLight').hidden) renderLightUi(); }
+function changed() { save(); refreshInfo(); drawPlan(); drawRings(); if (LM.on) scheduleLux(); else if (!$('pLight').hidden) renderLightUi(); if (!$('pDeco').hidden) renderDecoAmounts(); }
 
 function catIcon(kind) {
   const p = { light: 'M17 13m-8 0a8 8 0 1 0 16 0a8 8 0 1 0 -16 0 M11.5 7.5l11 11 M22.5 7.5l-11 11', tv: 'M4 4h26v15H4z M12 23h10', sofaL: 'M3 6h28v8H15v9H3z', sofa: 'M3 8h28v10H3z M3 8v10 M31 8v10', table: 'M17 13m-10 0a10 7 0 1 0 20 0a10 7 0 1 0 -20 0', chair: 'M11 4h12v18H11z', bed: 'M5 3h24v21H5z M5 8h24', cabinet: 'M3 7h28v12H3z M12 7v12 M22 7v12', shelf: 'M5 4h24v18H5z M5 10h24 M5 16h24', rug: 'M4 5h26v16H4z', plant: 'M17 13m-8 0a8 8 0 1 0 16 0a8 8 0 1 0 -16 0', lamp: 'M17 13m-6 0a6 6 0 1 0 12 0a6 6 0 1 0 -12 0' }[kind] || 'M4 5h26v16H4z';
@@ -774,6 +1359,7 @@ function ptr3(e) { const r = renderer.domElement.getBoundingClientRect(); ptr.se
 renderer.domElement.addEventListener('pointerdown', (e) => {
   if (walk.on) return;
   ptr3(e);
+  if (decoWallDown(e)) return;
   const hits = ray.intersectObjects(furnG.children, true);
   const itemOf = (h) => { let o = h.object; while (o && !o.userData.id) o = o.parent; return o && state.items.find((i) => i.id === o.userData.id); };
   let hit = hits.find((h) => { const i = itemOf(h); return i && !isRug(i) && !overhead(i); }) || hits.find((h) => { const i = itemOf(h); return i && !isRug(i); }) || hits[0];
@@ -794,6 +1380,7 @@ renderer.domElement.addEventListener('pointerup', end3); renderer.domElement.add
 let drag2 = null;
 plan.addEventListener('pointerdown', (e) => {
   const r = plan.getBoundingClientRect(), p = W2(e.clientX - r.left, e.clientY - r.top);
+  if (decoPlanDown(p)) return;
   const lay = (i) => (BYTYPE[i.type].kind === 'light' ? 0 : i.on ? 1 : isRug(i) ? 3 : 2), order = [...state.items].sort((a, b) => lay(a) - lay(b));
   const it = order.find((i) => (BYTYPE[i.type].kind === 'light' ? Math.hypot(p[0] - i.x, p[1] - i.z) <= Math.max(0.12, 11 / view.s) : inside(p, worldFootprint(i))));
   if (!it) { select(null, false); return; }
@@ -1149,6 +1736,18 @@ if (qs.has('test')) window.__plan = {   // nur für automatische Tests (?test)
   move(id, x, z, rot) { const it = state.items.find((i) => i.id === id); it.x = x; it.z = z; if (rot != null) it.rot = rot; place(it); changed(); return 'ok'; },
   info(id) { const it = state.items.find((i) => i.id === id); return [it.type, it.x.toFixed(2), it.z.toFixed(2), 'auf=' + (it.on || '-'), 'höhe=' + elevOf(it).toFixed(2)].join(' '); },
   sel(id) { select(id); return id; },
+  paint(k, hex) { paintTarget = k; setPaint(hex); return WALL_KEYS.map((w) => w + '=' + paintOf(w)).join(' '); },
+  floor(id, dir) { if (dir != null) setFloorDir(dir); setFloor(id); return curDecor().id + ' ' + state.room.floor.dir; },
+  tapWall(k) {   // Mitte der Wandinnenseite antippen: echte Zeigerereignisse auf der 3D-Fläche
+    const wl = walls.find((m) => m.userData.wall === k); if (!wl) return 'keine Wand';
+    const p = wl.position.clone().addScaledVector(wl.userData.n, 0.07); p.y = state.room.h * 0.6; p.project(camera);
+    const r = renderer.domElement.getBoundingClientRect(), x = r.left + ((p.x + 1) / 2) * r.width, y = r.top + ((1 - p.y) / 2) * r.height;
+    const o = { clientX: x, clientY: y, pointerId: 7, pointerType: 'touch', isPrimary: true, bubbles: true, button: 0 };
+    renderer.domElement.dispatchEvent(new PointerEvent('pointerdown', o)); renderer.domElement.dispatchEvent(new PointerEvent('pointerup', o));
+    return Math.round(x) + ',' + Math.round(y) + ' → ' + $('paintNow').textContent;
+  },
+  floorReady: () => !!(floorMesh && floorMesh.material.map && floorMesh.material.map === floorTexs.get(curDecor().id)),
+  deco: () => [`REFL Wand ${REFL.wall.toFixed(2)} Boden ${REFL.floor.toFixed(2)}`, $('paintAmt').innerText.replace(/\n/g, ' | '), $('floorAmt').innerText.replace(/\n/g, ' | ')].join(' || '),
   count: () => state.items.length + ' Möbel, Raum ' + state.room.w + '×' + state.room.l + ', Knopf: ' + ($('showBtn') || {}).textContent,
 };
 
@@ -1271,6 +1870,7 @@ function normRoom(r) {
   delete r.win;
   for (const wi of r.wins) { if (wi.height == null) wi.height = 1.3; if (wi.sill == null) wi.sill = 0.9; }
   if (r.north == null) r.north = 0;
+  normDeco(r);
   return r;
 }
 function winGeoms() {
@@ -1346,6 +1946,7 @@ function luxAt(x, z, D, lamps) {   // ohne Direktsonne
   return E;
 }
 function computeLux() {
+  applyRefl();
   const { w, l, h } = state.room, cell = 0.1, nx = Math.max(2, Math.round(w / cell)), nz = Math.max(2, Math.round(l / cell));
   const D = daylightSetup(), lamps = state.items.filter(isLight).map(lightOf).filter((L) => L.on);
   const As = 2 * w * l + 2 * (w + l) * h, rho = (w * l * (REFL.floor + REFL.ceil) + 2 * (w + l) * h * REFL.wall) / As;
@@ -1718,6 +2319,177 @@ const endNorth = (e) => { if (northDrag) { northDrag = false; changed(); lightCh
 pw.addEventListener('pointerup', endNorth, true); pw.addEventListener('pointercancel', endNorth, true);
 plan.addEventListener('pointerleave', () => { $('luxTip').hidden = true; });
 
+// ---------- Wände & Boden: Wandfarben je Wand, Bodenbelag mit echtem Stückmaß, Mengen ----------
+const PAINTS = [   // gängige Wandfarbtöne (ungefähr, keine Herstellerfarben) – wie „Wände streichen“ in der Tour
+  { name: 'Weiß', hex: '#f7f7f4' }, { name: 'Altweiß', hex: '#efe9dc' }, { name: 'Sand', hex: '#e2d4ba' }, { name: 'Greige', hex: '#cdc4b5' },
+  { name: 'Hellgrau', hex: '#d2d4d2' }, { name: 'Salbei', hex: '#b7c3aa' }, { name: 'Taubenblau', hex: '#a8b8c6' }, { name: 'Altrosa', hex: '#d8b1a8' },
+  { name: 'Terrakotta', hex: '#c88a6a' }, { name: 'Ocker', hex: '#d2a85c' }, { name: 'Petrol', hex: '#41696e' }, { name: 'Anthrazit', hex: '#55595c' },
+];
+const WALL_WHITE = '#f7f7f4', WALL_KEYS = ['N', 'S', 'W', 'E'], WALL_NAMES = { N: 'hinten', S: 'vorn', W: 'links', E: 'rechts' };
+const M2_PER_L = 7, COATS = 2;
+let paintTarget = 'all', decoGroup = null, decoFlash = null, wallTap = null, floorMesh = null, floorJob = 0;
+const floorTexs = new Map();   // Dekor-ID → CanvasTexture (UV in Metern, repeat = 1 / Kachelgröße)
+const swatchUrls = new Map();
+const fmt1 = (v, d = 1) => v.toFixed(d).replace('.', ',');
+function normDeco(r) {   // nur Literale: läuft schon beim Laden des Speicherstands
+  const p = r.paint && typeof r.paint === 'object' ? r.paint : {};
+  r.paint = {};
+  for (const k of ['N', 'S', 'W', 'E']) r.paint[k] = typeof p[k] === 'string' && /^#[0-9a-f]{6}$/i.test(p[k]) ? p[k].toLowerCase() : '#f7f7f4';
+  const f = r.floor && typeof r.floor === 'object' ? r.floor : {};
+  r.floor = { id: MC3Boden.floorDecor(f.id) ? f.id : 'vinyl-eiche-hell', dir: f.dir === 90 ? 90 : 0 };
+}
+function paintOf(k) { return (state.room.paint && state.room.paint[k]) || WALL_WHITE; }
+function colorName(hex) { const c = PAINTS.find((p) => p.hex === hex); return c ? c.name : hex.toUpperCase(); }
+function curDecor() { return MC3Boden.floorDecor(state.room.floor && state.room.floor.id) || MC3Boden.FLOOR_DECORS[0]; }
+function floorAlongX() { const longX = state.room.w >= state.room.l; return state.room.floor.dir === 90 ? !longX : longX; }   // Dielen entlang x?
+
+// Boden: UV in Metern (Kachel = tileX × tileY), damit „quer“ nur die Achsen tauscht und nichts verzerrt
+function buildFloorMesh(w, l) {
+  const g = new THREE.PlaneGeometry(w, l), uv = g.attributes.uv, pos = g.attributes.position, alongX = floorAlongX();
+  for (let i = 0; i < uv.count; i++) { const x = pos.getX(i) + w / 2, y = pos.getY(i) + l / 2; if (alongX) uv.setXY(i, x, y); else uv.setXY(i, y, x); }
+  const d = curDecor(), tex = floorTexs.get(d.id);
+  const mat = new THREE.MeshStandardMaterial({ color: tex ? 0xffffff : d.base, map: tex || null, roughness: d.rough, metalness: 0 });
+  const m = new THREE.Mesh(g, mat); m.rotation.x = -Math.PI / 2; m.receiveShadow = true;
+  floorMesh = m;
+  if (!tex) loadFloorTex(d);
+  return m;
+}
+function loadFloorTex(d) {
+  const job = ++floorJob; setFloorBusy(true);
+  MC3Boden.floorTextureAsync(d).then((ft) => {
+    let tex = floorTexs.get(d.id);
+    if (!tex) {
+      tex = new THREE.CanvasTexture(ft.canvas); tex.colorSpace = THREE.SRGBColorSpace; tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+      tex.anisotropy = renderer.capabilities.getMaxAnisotropy(); tex.repeat.set(1 / ft.tileX, 1 / ft.tileY); floorTexs.set(d.id, tex);
+    }
+    if (floorMesh && curDecor().id === d.id) { floorMesh.material.map = tex; floorMesh.material.color.set(0xffffff); floorMesh.material.needsUpdate = true; }
+    if (job === floorJob) setFloorBusy(false);
+  }).catch((e) => { console.warn('Bodenmuster:', e); if (job === floorJob) setFloorBusy(false); });
+}
+function setFloorBusy(on) { const b = $('floorBusy'); if (b) b.hidden = !on; }
+function rebuildFloor() {
+  if (!floorMesh) return;
+  const old = floorMesh, m = buildFloorMesh(state.room.w, state.room.l);
+  roomG.remove(old); old.geometry.dispose(); old.material.dispose(); roomG.add(m);
+}
+
+// Flächen und Mengen
+function wallAreas() {   // Wandflächen ohne Tür und Fenster (m²)
+  const { w, l, h } = state.room, A = { N: w * h, S: w * h, W: l * h, E: l * h }, d = state.room.door;
+  A[d.wall] -= Math.min(d.width, wallLen(d.wall)) * Math.min(2.05, h);
+  for (const g of winGeoms()) A[g.wall] -= g.width * (g.top - g.sill);
+  for (const k of WALL_KEYS) A[k] = Math.max(0, A[k]);
+  return A;
+}
+const litersFor = (a) => Math.ceil(((a * COATS) / M2_PER_L) * 2) / 2;
+function applyRefl() {   // Lichtsimulation: Reflexionsgrad aus Wandfarben (flächengewichtet) und Bodendekor
+  const A = wallAreas(); let s = 0, a = 0;
+  for (const k of WALL_KEYS) { s += A[k] * MC3Boden.reflectance(paintOf(k)); a += A[k]; }
+  REFL.wall = a > 0 ? s / a : 0.7;
+  REFL.floor = MC3Boden.reflectance(curDecor().base);
+  const el = $('lRefl'); if (el) el.textContent = `Wände ${Math.round(REFL.wall * 100)} %, Decke ${Math.round(REFL.ceil * 100)} %, Boden ${Math.round(REFL.floor * 100)} %`;
+}
+function renderDecoAmounts() {
+  const A = wallAreas(), by = new Map();
+  for (const k of WALL_KEYS) { const c = paintOf(k); by.set(c, (by.get(c) || 0) + A[k]); }
+  let html = '';
+  for (const [c, a] of by) html += `<div class="wide"><span><i class="dot" style="background:${c}"></i>${colorName(c)}</span><b>${fmt1(a)} m² · ${fmt1(litersFor(a), litersFor(a) % 1 ? 1 : 0)} L</b></div>`;
+  $('paintAmt').innerHTML = html;
+  const d = curDecor(), { w, l } = state.room, area = w * l, o = MC3Boden.floorOrder(d, area);
+  const skirting = Math.max(0, 2 * (w + l) - Math.min(state.room.door.width, wallLen(state.room.door.wall)));
+  $('floorAmt').innerHTML = `<div class="wide">Bodenfläche <b>${fmt1(area, 2)} m²</b></div>`
+    + `<div class="wide"><span title="inkl. Verschnitt">Bestellen (+${Math.round(d.waste * 100)} %)</span> <b>≈ ${fmt1(o.m2)} m² · ${o.pieces} ${o.unit}</b></div>`
+    + `<div class="wide">Sockelleiste (ohne Tür) <b>≈ ${fmt1(skirting)} m</b></div>`;
+  applyRefl();
+}
+
+// Bedienung
+function buildDecoUi() {
+  $('wallPick').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; paintTarget = b.dataset.w; decoFlash = { k: paintTarget, t0: performance.now() }; renderDeco(); drawPlan(); };
+  const pb = $('paints');
+  for (const p of PAINTS) { const b = document.createElement('button'); b.style.background = p.hex; b.title = p.name; b.setAttribute('aria-label', p.name); b.dataset.hex = p.hex; b.onclick = () => setPaint(p.hex); pb.appendChild(b); }
+  $('paintCustom').oninput = (e) => setPaint(e.target.value.toLowerCase());
+  const gb = $('floorGroups');
+  for (const g of MC3Boden.FLOOR_GROUPS) { const b = document.createElement('button'); b.textContent = g; b.dataset.g = g; b.onclick = () => { decoGroup = g; renderDeco(); }; gb.appendChild(b); }
+  $('dirL').onclick = () => setFloorDir(0); $('dirQ').onclick = () => setFloorDir(90);
+  $('tDeco').onclick = () => setTab('tDeco'); $('toDeco').onclick = () => setTab('tDeco');
+}
+function setPaint(hex) {
+  const keys = paintTarget === 'all' ? WALL_KEYS : [paintTarget];
+  for (const k of keys) state.room.paint[k] = hex;
+  for (const wl of walls) if (keys.includes(wl.userData.wall)) wl.material.color.set(hex);
+  renderDeco(); changed();
+}
+function setFloor(id) { if (state.room.floor.id === id) return; state.room.floor.id = id; rebuildFloor(); renderDeco(); changed(); }
+function setFloorDir(dir) { if (state.room.floor.dir === dir) return; state.room.floor.dir = dir; rebuildFloor(); renderDeco(); changed(); }
+function renderDeco() {
+  for (const b of $('wallPick').children) b.setAttribute('aria-pressed', b.dataset.w === paintTarget);
+  const same = WALL_KEYS.every((k) => paintOf(k) === paintOf('N')), cur = paintTarget === 'all' ? (same ? paintOf('N') : null) : paintOf(paintTarget);
+  for (const b of $('paints').children) b.setAttribute('aria-pressed', b.dataset.hex === cur);
+  $('paintCustom').value = cur || WALL_WHITE;
+  $('paintNow').textContent = (paintTarget === 'all' ? 'Alle Wände' : 'Wand ' + WALL_NAMES[paintTarget]) + ': ' + (cur ? colorName(cur) : 'verschiedene Farben');
+  const d = curDecor(); if (!decoGroup) decoGroup = d.group;
+  for (const b of $('floorGroups').children) b.setAttribute('aria-pressed', b.dataset.g === decoGroup);
+  const box = $('decors'), list = MC3Boden.FLOOR_DECORS.filter((x) => x.group === decoGroup);
+  if (box.dataset.g !== decoGroup) {
+    box.dataset.g = decoGroup; box.innerHTML = '';
+    for (const x of list) {
+      const b = document.createElement('button'); b.dataset.id = x.id; b.title = `${x.group} · ${x.name} · ${x.size}`;
+      const img = document.createElement('img'); img.alt = ''; img.style.background = x.base; if (swatchUrls.has(x.id)) img.src = swatchUrls.get(x.id);
+      const t = document.createElement('span'); t.innerHTML = `${x.name}<br><small>${x.size}</small>`;
+      b.append(img, t); b.onclick = () => setFloor(x.id); box.appendChild(b);
+    }
+    makeSwatches(list);
+  }
+  for (const b of box.children) b.setAttribute('aria-pressed', b.dataset.id === d.id);
+  $('decorName').textContent = `${d.group} · ${d.name}`; $('decorSize').textContent = d.size;
+  $('dirL').classList.toggle('on', state.room.floor.dir !== 90); $('dirQ').classList.toggle('on', state.room.floor.dir === 90);
+  renderDecoAmounts();
+}
+function makeSwatches(list) {   // Vorschaubilder nacheinander (Handy bleibt bedienbar)
+  const todo = list.filter((x) => !swatchUrls.has(x.id));
+  const step = () => {
+    const x = todo.shift(); if (!x) return;
+    try { swatchUrls.set(x.id, MC3Boden.floorSwatch(x, 168, 1.5)); } catch (e) { console.warn('Vorschau:', e); }
+    const img = document.querySelector(`#decors button[data-id="${x.id}"] img`); if (img && swatchUrls.has(x.id)) img.src = swatchUrls.get(x.id);
+    setTimeout(step, 0);
+  };
+  setTimeout(step, 0);
+}
+function decoWallDown(e) {   // im Tab „Farbe“: Antippen einer Wand wählt sie (Möbel davor gehen vor)
+  if ($('pDeco').hidden) return false;
+  const wh = ray.intersectObjects(walls.filter((wl) => !wl.material.transparent), false)[0];
+  if (!wh) return false;
+  const fh = ray.intersectObjects(furnG.children, true)[0];
+  if (fh && fh.distance < wh.distance) return false;
+  wallTap = { id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now(), k: wh.object.userData.wall };
+  return true;
+}
+function decoWallUp(e) {   // nur bei echtem Tippen (kein Drehen der Ansicht)
+  const t = wallTap; wallTap = null;
+  if (!t || t.id !== e.pointerId || Math.hypot(e.clientX - t.x, e.clientY - t.y) > 8 || performance.now() - t.t > 700) return;
+  pickWall(t.k);
+}
+function decoPlanDown(p) {   // Grundriss: Tippen auf/an eine Wand
+  if ($('pDeco').hidden) return false;
+  if (state.items.some((i) => inside(p, worldFootprint(i)))) return false;
+  const { w, l } = state.room, tol = 0.12 + 14 / view.s, [x, z] = p;
+  const cand = [['N', Math.abs(z + l / 2), Math.abs(x) <= w / 2 + tol], ['S', Math.abs(z - l / 2), Math.abs(x) <= w / 2 + tol], ['W', Math.abs(x + w / 2), Math.abs(z) <= l / 2 + tol], ['E', Math.abs(x - w / 2), Math.abs(z) <= l / 2 + tol]]
+    .filter((c) => c[2] && c[1] <= tol).sort((a, b) => a[1] - b[1]);
+  if (!cand.length) return false;
+  pickWall(cand[0][0]); return true;
+}
+function pickWall(k) { paintTarget = k; decoFlash = { k, t0: performance.now() }; renderDeco(); drawPlan(); }
+function tickDeco() {
+  if (!decoFlash) return;
+  const a = Math.max(0, 1 - (performance.now() - decoFlash.t0) / 900);
+  for (const wl of walls) { const on = decoFlash.k === 'all' || wl.userData.wall === decoFlash.k; wl.material.emissive.set(0xa8792a); wl.material.emissiveIntensity = on ? 0.5 * a : 0; }
+  if (a <= 0) decoFlash = null;
+}
+renderer.domElement.addEventListener('pointerup', decoWallUp);
+renderer.domElement.addEventListener('pointercancel', () => { wallTap = null; });
+function initDeco() { buildDecoUi(); applyRefl(); }
+
 // ---------- Ansichten ----------
 function setView(v) {
   const el = $('views'); el.className = 'views ' + (v === '3d' ? 'only3d' : v === 'plan' ? 'onlyplan' : 'both');
@@ -1744,12 +2516,13 @@ applyBg(); buildCatalog(); roomInputs(); buildRoom3D(); rebuildAll();
 const fromHash = () => ({ '#grundriss': 'plan', '#3d': '3d', '#beides': 'both' }[location.hash]);
 setView(fromHash() || (matchMedia('(max-width: 760px)').matches ? '3d' : 'both'));
 addEventListener('hashchange', () => { const v = fromHash(); if (v) setView(v); });
-select(null, false); setTab('tAdd'); updatePhase(); renderLightUi(); updateTag(); if (LM.on) setLightMode(true);
+initDeco(); select(null, false); setTab('tAdd'); updatePhase(); renderLightUi(); updateTag(); if (LM.on) setLightMode(true);
 const camDir = new THREE.Vector3();
 const clock = new THREE.Clock();
 (function loop() {
   const dt = Math.min(0.05, clock.getDelta());
   if (walk.on) updateWalk(dt); else controls.update();
+  tickDeco();
   for (const wl of walls) {
     camDir.copy(camera.position).sub(wl.position); const facing = camDir.dot(wl.userData.n) < 0;
     if (wl.material.transparent !== facing) { wl.material.transparent = facing; wl.material.opacity = facing ? 0.1 : 1; wl.material.depthWrite = !facing; wl.material.needsUpdate = true; }

@@ -98,6 +98,24 @@
   .lrow .lname { text-align: left; background: none; border: 0; color: var(--ink); font: 13px var(--sans); cursor: pointer; padding: 0; }
   .lrow .lname small { display: block; color: var(--mute); font-size: 11.5px; }
   .warnnote { font-size: 12px; color: var(--warn); margin: 6px 0 0; }
+  /* Wände & Boden */
+  .tabs button { white-space: nowrap; }
+  .wallpick { display: flex; flex-wrap: wrap; gap: 4px; }
+  .wallpick button, .groups button { padding: 5px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); color: var(--ink); font: 500 12.5px var(--sans); cursor: pointer; }
+  .wallpick button[aria-pressed="true"], .groups button[aria-pressed="true"] { border-color: var(--brass); background: var(--brass-soft); }
+  .paints { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 9px 6px; margin-top: 10px; }
+  .paints button { width: 100%; max-width: 36px; aspect-ratio: 1; justify-self: center; padding: 0; border-radius: 50%; border: 2px solid var(--panel); box-shadow: 0 0 0 1px var(--line); cursor: pointer; }
+  .paints button[aria-pressed="true"] { box-shadow: 0 0 0 2.5px var(--brass); }
+  .decorow { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; font-size: 13px; min-height: 26px; }
+  .colpick { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--mute); cursor: pointer; white-space: nowrap; }
+  .colpick input { width: 34px; height: 26px; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: none; cursor: pointer; }
+  .groups { display: flex; gap: 4px; }
+  .decors { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: 8px; }
+  .decors button { display: flex; flex-direction: column; gap: 3px; padding: 4px; border: 1px solid var(--line); border-radius: 9px; background: var(--panel); color: var(--ink); font: 11.5px/1.25 var(--sans); text-align: left; cursor: pointer; min-width: 0; }
+  .decors button[aria-pressed="true"] { border-color: var(--brass); box-shadow: 0 0 0 1.5px var(--brass); }
+  .decors img { width: 100%; aspect-ratio: 1; border-radius: 6px; display: block; background: var(--paper); }
+  .decors small { color: var(--mute); font-size: 10.5px; }
+  .dist .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 0 1px var(--line); margin-right: 5px; vertical-align: -1px; }
   /* Rumlaufen (Ich-Perspektive) */
   .walk-btn { position: absolute; right: 10px; top: 10px; z-index: 3; padding: 7px 13px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font: 600 13px var(--sans); cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.14); }
   .walk-btn:hover { border-color: var(--brass); }
@@ -163,6 +181,7 @@
       <button role="tab" id="tAdd" aria-selected="true">Möbel +</button>
       <button role="tab" id="tSel" aria-selected="false">Ausgewählt</button>
       <button role="tab" id="tLight" aria-selected="false">Licht</button>
+      <button role="tab" id="tDeco" aria-selected="false" title="Wände streichen und Boden wählen">Farbe</button>
     </div>
     <section id="pRoom" hidden>
       <h2>Raummaße (innen)</h2>
@@ -180,6 +199,7 @@
       <h2 style="margin-top:14px">Fenster</h2>
       <div id="winList"></div>
       <button class="btn" id="addWin">+ Fenster hinzufügen</button>
+      <button class="btn" id="toDeco" style="margin-top:12px">Wandfarbe &amp; Boden …</button>
       <div class="row" style="margin-top:14px"><button class="btn" id="resetEx">Beispiel laden</button><button class="btn" id="clearAll">Alle Möbel entfernen</button></div>
       <p class="note" id="clearNote" hidden></p>
       <p class="note">Die Einrichtung bleibt in diesem Browser gespeichert.</p>
@@ -223,6 +243,21 @@
         <div class="row"><button class="btn" id="dup">Duplizieren</button><button class="btn" id="del">Entfernen</button></div>
       </div>
     </section>
+    <section id="pDeco" hidden>
+      <h2>Wandfarbe</h2>
+      <div class="wallpick" id="wallPick"><button data-w="all" title="Alle Wände">Alle</button><button data-w="N">hinten</button><button data-w="S">vorn</button><button data-w="W">links</button><button data-w="E">rechts</button></div>
+      <div class="paints" id="paints"></div>
+      <div class="decorow"><span id="paintNow"></span><label class="colpick">Eigene Farbe<input type="color" id="paintCustom" value="#f7f7f4"></label></div>
+      <p class="note" style="margin:2px 0 0">Im 3D auf eine Wand tippen, um nur diese zu streichen. Die Decke bleibt weiß.</p>
+      <div class="dist" id="paintAmt" style="margin-top:8px"></div>
+      <h2 style="margin-top:16px">Boden</h2>
+      <div class="groups" id="floorGroups"></div>
+      <div class="decors" id="decors"></div>
+      <div class="decorow"><span><b id="decorName"></b> <span class="note" id="decorSize"></span></span><span class="note" id="floorBusy" hidden>Muster wird berechnet …</span></div>
+      <div class="row" style="align-items:center"><span class="note">Verlegerichtung</span><button class="btn sm" id="dirL" title="Dielen parallel zur längeren Wand">längs</button><button class="btn sm" id="dirQ" title="Dielen quer zur längeren Wand">quer</button></div>
+      <div class="dist" id="floorAmt" style="margin-top:8px"></div>
+      <p class="note">Richtwerte: Farbe für 2 Anstriche, ca. 7 m² je Liter. Verschnitt je nach Belag 7–12 %. Packungsgrößen und Ergiebigkeit beim Händler prüfen.</p>
+    </section>
     <section id="pLight" hidden>
       <div class="row"><button class="btn primary" id="lightOn">Lichtsimulation an</button><button class="btn" id="luxBtn">Helligkeit (Lux) zeigen</button></div>
       <p class="note" id="lSun" style="margin:8px 0 0"></p>
@@ -239,7 +274,7 @@
       <div class="dist" style="margin-top:8px"><div>Ø Raum <b id="lAvg">–</b></div><div>Minimum <b id="lMin">–</b></div><div class="wide">am Zeiger/Finger <b id="lPtr">–</b></div><div class="wide">Direkte Sonne <b id="lSunA">–</b></div></div>
       <div class="legend" id="lLegend" hidden><div id="lGrad"></div><div id="lTicks"></div>
         <div class="cats"><span>unter 50 lx: dunkel</span><span>100–300: Wohnen</span><span>300–500: Lesen, Arbeiten</span><span>500+: Küche, Schreibtisch</span><span><i class="sun"></i>direkte Sonne (Zehntausende lx, eigene Farbe)</span></div></div>
-      <p class="note">Schätzung, ca. ±30 %. Lampen als Punktlichtquellen aus Lumen und Abstand, Reflexionen grob gemittelt (Wände 70 %, Decke 80 %, Boden 30 %), Tageslicht aus einem Himmelsmodell durch die Fenster (Glas 65 %). Keine Nachbarhäuser, Bäume, Gardinen oder Möbelschatten in den Lux-Werten, kein Raytracing.</p>
+      <p class="note">Schätzung, ca. ±30 %. Lampen als Punktlichtquellen aus Lumen und Abstand, Reflexionen grob gemittelt (<span id="lRefl">Wände 70 %, Decke 80 %, Boden 30 %</span>, aus Wandfarbe und Boden), Tageslicht aus einem Himmelsmodell durch die Fenster (Glas 65 %). Keine Nachbarhäuser, Bäume, Gardinen oder Möbelschatten in den Lux-Werten, kein Raytracing.</p>
       <h2 style="margin-top:12px">Lichtquellen im Raum</h2>
       <div id="lList"></div>
       <h2 style="margin-top:12px">Lichtquelle hinzufügen</h2>
@@ -326,7 +361,7 @@ async function fromPassword(pw) {
   return crypto.subtle.deriveKey({ name: 'PBKDF2', salt: unb64(m.salt), iterations: m.iterations, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, true, ['decrypt']);
 }
 let started = false;
-async function start() { if (started) return; started = true; $('lock').hidden = true; await import('./app.js?v=81ebac70b7'); }
+async function start() { if (started) return; started = true; $('lock').hidden = true; await import('./app.js?v=616539707f'); }
 (async () => {
   try {
     const saved = localStorage.getItem(STORE);
